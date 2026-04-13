@@ -478,8 +478,12 @@ async function handleFile(file){
         }]
       })
     });
-    const data = await resp.json();
+    const raw = await resp.text();
+    console.log('Worker response:', raw);
+    if(!raw || raw.trim() === '') throw new Error('Empty response from worker');
+    const data = JSON.parse(raw);
     const text = data.content ? data.content.map(x=>x.text||'').join('') : '';
+    if(!text) throw new Error('No text in response');
     const clean = text.replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(clean);
     if(parsed.title) document.getElementById('newTitle').value = parsed.title;
@@ -489,9 +493,9 @@ async function handleFile(file){
     status.style.color = '#145960';
     setTimeout(()=>status.style.display='none', 2000);
   } catch(e) {
-    console.error(e);
-    status.textContent = 'לא הצלחתי לזהות — מלאי ידנית';
-    setTimeout(()=>status.style.display='none', 3000);
+    console.error('Identify error:', e);
+    status.textContent = 'שגיאה: ' + e.message + ' — מלאי ידנית';
+    setTimeout(()=>status.style.display='none', 5000);
   }
 }
 
