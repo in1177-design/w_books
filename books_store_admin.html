@@ -213,7 +213,16 @@
         </div>
     </div>
 </div>
-
+<script>
+    // מנגנון סיסמה עצמאי שפועל לפני חיבור למסד הנתונים
+    window.checkPass = function() {
+        if(document.getElementById('pass-input').value === '1177') {
+            document.getElementById('auth-overlay').style.display = 'none';
+        } else {
+            alert('סיסמה שגויה');
+        }
+    };
+</script>
 <script type="module">
     // הגדרות Firebase - יש להשתמש בהגדרות שלך מהקוד המקורי
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -299,14 +308,7 @@
         }
     };
 
-    // פונקציות ניהול (הוספה, עריכה, מחיקה) - מבוסס על הקוד שלך
-    window.checkPass = function() {
-        if(document.getElementById('pass-input').value === '1177') {
-            document.getElementById('auth-overlay').style.display = 'none';
-        } else {
-            alert('סיסמה שגויה');
-        }
-    };
+ 
 
     window.deleteBook = async function(id) {
         if(confirm('למחוק את הספר?')) {
