@@ -192,7 +192,7 @@ function setFilter(cat, el){
 
 function cardHtml(b){
   const cats = getCats(b);
-  const firstCat = cats[0] || '';
+  const firstCat = cats.join(' • ') || '';
   const selected = selectedIds.has(String(b.id));
   return `
     <div class="card ${b.sold?'sold':''} ${selected?'selected':''}" onclick="toggleSelect('${b.id}')" data-id="${b.id}">
