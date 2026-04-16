@@ -361,7 +361,7 @@ async function handleFile(file){
   const url = await readFileAsDataURL(file);
   const resized = await resizeImage(url, 400);
   newBookImg = resized;
-  document.getElementById('thumbGrid').innerHTML = `<img src="${resized}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`;
+  document.getElementById('thumbGrid').innerHTML = `<img src="${resized}" style="width:400px;height:400px;object-fit:cover;border-radius:8px;border:1px solid #ddd">`;
   const status = document.getElementById('identStatus');
   status.style.display='block';
   status.textContent='⏳ מזהה שם ספר...';
