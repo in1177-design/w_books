@@ -262,12 +262,7 @@ function startListening(){
       }
     } else {
       books = snap.docs.map(d => ({...d.data(), id: d.id}));
-      books.sort((a,b) => {
-       const aNew = a.createdAt?.toMillis?.() ?? 0;
-       const bNew = b.createdAt?.toMillis?.() ?? 0;
-       if (aNew !== bNew) return bNew - aNew; // חדש ראשון
-       return (a.order||0) - (b.order||0);   // אחר כך לפי order
-      });
+     books.sort((a,b) => (a.order||0) - (b.order||0));
       buildFilters('filters');
       render();
     }
@@ -439,7 +434,7 @@ async function addOneBook(){
     title, author,
     cat: cat.length ? cat : ['ספרי ילדים'],
     price, img: newBookImg,
-    sold: false, order: Date.now(),
+    sold: false, order: -Date.now(),
     createdAt: new Date()
   });
   closePanel();
