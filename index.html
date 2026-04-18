@@ -291,7 +291,12 @@ function render(){
 
 onSnapshot(booksCol, (snap) => {
   books = snap.docs.map(d => ({...d.data(), id: d.id}));
-  books.sort((a,b) => (a.order||0) - (b.order||0));
+  books.sort((a,b) => {
+     const aNew = a.createdAt?.toMillis?.() ?? 0;
+     const bNew = b.createdAt?.toMillis?.() ?? 0;
+     if (aNew !== bNew) return bNew - aNew;
+     return (a.order||0) - (b.order||0);
+   });
   buildFilters();
   render();
   updateFab();
