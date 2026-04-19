@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- Last updated: 16/04/2026 12:29 -->
+<!-- built: 07:46 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ניהול ספרים</title>
 <style>
@@ -434,7 +434,7 @@ async function addOneBook(){
     title, author,
     cat: cat.length ? cat : ['ספרי ילדים'],
     price, img: newBookImg,
-    sold: false, order: -Date.now(),
+    sold: false, order: 9999 + Date.now() % 1000,
     createdAt: new Date()
   });
   closePanel();

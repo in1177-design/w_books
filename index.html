@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- Last updated: 16/04/2026 13:48 -->
+<!-- built: 07:46 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ספרים יד שניה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -15,10 +15,10 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .header p{font-size:.85rem;color:#654B44;font-weight:600;margin-top:2px}
 
 /* PROJECT INFO */
-.project-info{background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:2px solid #FFF;border-radius:16px;padding:12px 16px;margin:12px 16px;text-align:center;color:#fff;font-size:16px;font-weight:500;line-height:1.6}
+.project-info{background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:2px solid #FFF;border-radius:16px;padding:12px 16px;margin:12px 16px;text-align:center;color:#654B44;font-size:16px;font-weight:500;line-height:1.6}
 
 /* FILTERS */
-.controls{padding:12px 12px;display: flex; justify-content: center;}
+.controls{padding:12px 12px;display:flex;justify-content:center;position:sticky;top:64px;z-index:9;background:rgba(255,251,215,0.92);backdrop-filter:blur(6px);border-bottom:1px solid rgba(101,75,68,0.08)}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
 .fb{padding:5px 14px;border:2px solid #87a3a5;border-radius:20px;font-size:12px;background:#fffbd7;color:#000;cursor:pointer;transition:.15s;font-family:'Heebo',sans-serif}
 .fb.active{background:#654B44;color:white;border-color:#654B44;font-weight:700}
@@ -61,7 +61,7 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 /* CARD BOTTOM */
 .card-body{padding:16px 12px;background:#fff;display:flex;align-items:center;justify-content:space-between;direction:rtl;margin-top: auto; flex: 1;}
 .card-info{display:flex;flex-direction:column;gap:3px;text-align:right;flex:1;min-width:0}
-.category-badge{display:inline-block;background:rgba:#26666b29;color:#aaa;padding:2px 8px;border-radius:5px;font-size:0.72rem;width:fit-content;margin-bottom:2px}
+.category-badge{display:inline-block;background:#eaf5f6;color:#654b44;padding:2px 8px;border-radius:5px;font-size:0.72rem;width:fit-content;margin-bottom:2px}
 .card-author{font-size:0.8rem;color:#654b44}
 .price-circle{background:#26666B;color:white;width:46px;height:46px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;margin-right:8px;line-height:1;text-align:center}
 
@@ -96,11 +96,13 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .btn-cancel{background:#f5f5f5;color:#555;border:none;border-radius:10px;padding:10px;width:100%;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif}
 
 /* ZOOM MODAL */
-#zoomModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;align-items:center;justify-content:center}
+#zoomModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;padding:1rem}
 #zoomModal.open{display:flex}
-#zoomModal img{max-width:600px;max-height:90vh;object-fit:contain;border-radius:12px}
-@media(max-width:767px){#zoomModal img{width:calc(100vw - 32px);max-width:none}}
-.zoom-close{position:absolute;top:20px;right:20px;color:white;font-size:2rem;cursor:pointer;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;line-height:1}
+.zoom-modal-inner{position:relative;background:#fff;border-radius:16px;overflow:hidden;max-width:420px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.4)}
+#zoomModal img{width:100%;max-height:75vh;object-fit:contain;display:block}
+.zoom-modal-title{padding:12px 16px;font-size:1rem;font-weight:700;color:#654B44;text-align:right;background:#fff;direction:rtl}
+.zoom-close{position:absolute;top:10px;left:10px;color:#654B44;font-size:1.5rem;cursor:pointer;background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10}
+@media(max-width:767px){.zoom-modal-inner{max-width:calc(100vw - 32px)}}
 </style>
 </head>
 <body>
@@ -124,9 +126,9 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 
 <div class="fab-wrap">
   <button class="fab-order" id="fabOrder" onclick="openOrderModal()">🛒 סיכום הזמנה <span class="fab-badge" id="fabBadge">0</span></button>
-  <button class="fab-wa" onclick="handleWaBtn()">
+  <button class="fab-wa" id="fabWa" onclick="handleWaBtn()">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.858L.054 23.03a.75.75 0 00.917.917l5.172-1.478A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.68-.524-5.2-1.436l-.373-.22-3.07.877.877-3.07-.22-.373A9.953 9.953 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-    צור קשר
+    <span id="fabWaText">צור קשר</span>
   </button>
 </div>
 
@@ -149,8 +151,11 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 
 <!-- ZOOM MODAL -->
 <div id="zoomModal" onclick="closeZoomModal()">
-  <button class="zoom-close" onclick="closeZoomModal()">×</button>
-  <img id="zoomImg" src="" alt="">
+  <div class="zoom-modal-inner" onclick="event.stopPropagation()">
+    <button class="zoom-close" onclick="closeZoomModal()">✕</button>
+    <img id="zoomImg" src="" alt="">
+    <div class="zoom-modal-title" id="zoomTitle"></div>
+  </div>
 </div>
 
 <script type="module">
@@ -169,7 +174,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const booksCol = collection(db, 'books');
 
-const ALL_CATS = ["הכל","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרי קריאה","משחקים","חוברות לימוד"];
+const ALL_CATS = ["הכל","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרים עבור מבוגרים","משחקים","חוברות לימוד","ספריית פיג'מה"];
 const PHONE = "972544923904";
 
 let books = [];
@@ -210,7 +215,7 @@ function cardHtml(b){
       <div class="card-body">
         <div class="card-info">
          <div style="display:flex;flex-wrap:wrap;gap:3px">${firstCat}</div>
-          <span class="card-author">${b.author ? 'מאת: '+b.author : ''}</span>
+          <span class="card-author">${b.author || ''}</span>
         </div>
         <div class="price-circle">${b.price}<br>&#8362;</div>
       </div>
@@ -230,14 +235,24 @@ function updateFab(){
   const n = selectedIds.size;
   const fabOrder = document.getElementById('fabOrder');
   const badge = document.getElementById('fabBadge');
+  const fabWaText = document.getElementById('fabWaText');
   badge.textContent = n;
-  if(n > 0) fabOrder.classList.add('visible');
-  else fabOrder.classList.remove('visible');
+  if(n > 0) {
+    fabOrder.classList.add('visible');
+    fabWaText.textContent = n + ' ספרים נבחרו — שלחי הזמנה';
+  } else {
+    fabOrder.classList.remove('visible');
+    fabWaText.textContent = 'צור קשר';
+  }
 }
 
 function handleWaBtn(){
-  var msg = encodeURIComponent('אני מעוניינת לרכוש ספר מהיריד. האם תוכלי לעזור לי?');
-  window.open('https://wa.me/' + PHONE + '?text=' + msg, '_blank');
+  if(selectedIds.size > 0){
+    openOrderModal();
+  } else {
+    var msg = encodeURIComponent('אני מעוניינת לרכוש ספר מהיריד. האם תוכלי לעזור לי?');
+    window.open('https://wa.me/' + PHONE + '?text=' + msg, '_blank');
+  }
 }
 
 function openOrderModal(){
@@ -282,6 +297,7 @@ function openZoomModal(id){
   const b = books.find(x => String(x.id) === String(id));
   if(!b || !b.img) return;
   document.getElementById('zoomImg').src = b.img;
+  document.getElementById('zoomTitle').textContent = b.title || '';
   document.getElementById('zoomModal').classList.add('open');
 }
 
