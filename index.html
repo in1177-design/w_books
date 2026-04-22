@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 17:30 -->
+<!-- built: 20:20 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ספרים יד שניה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -90,10 +90,32 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 
 /* === RECOMMENDATION DISPLAY === */
 /* Yellow recommendation button on card image */
-.rec-yellow-btn{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);background:#fbbf24;border:none;border-radius:30px;padding:7px 14px 7px 10px;display:flex;align-items:center;gap:10px;cursor:pointer;z-index:5;box-shadow:0 3px 12px rgba(0,0,0,0.25);white-space:nowrap;min-width:0}
-.rec-yellow-btn:hover{background:#f59e0b;transform:translateX(-50%) scale(1.03)}
-.rec-btn-text{font-size:11px;font-weight:900;color:#78350f;line-height:1.3;direction:rtl;text-align:right}
-@media(max-width:767px){.rec-yellow-btn{padding:5px 10px 5px 8px;bottom:44px}.rec-btn-text{font-size:10px}}
+/* Yellow rec button — flush left, rounded right */
+.rec-yellow-btn{
+  position:absolute;
+  bottom:46px;
+  left:0;
+  display:flex;
+  flex-direction:row;
+  justify-content:flex-end;
+  align-items:center;
+  padding:0px 20px 0px 10px;
+  gap:10px;
+  width:113px;
+  height:60px;
+  background:#EDCD67;
+  border-radius:0px 35px 35px 0px;
+  border:none;
+  cursor:pointer;
+  z-index:5;
+  box-shadow:2px 3px 10px rgba(0,0,0,0.2);
+  overflow:visible;
+}
+.rec-yellow-btn:hover{background:#e6c050}
+.rec-btn-text{font-size:10px;font-weight:400;color:#5a3e00;line-height:1.35;direction:rtl;text-align:right;flex-shrink:0}
+.rec-portraits{display:flex;flex-direction:row-reverse;align-items:center;position:relative;flex-shrink:0}
+.rec-portrait{width:60px!important;height:60px!important;min-width:60px;min-height:60px;max-width:60px;max-height:60px;border-radius:50%;object-fit:cover;border:3px solid;flex-shrink:0;display:block}
+.rec-portrait:not(:last-child){margin-right:-20px}
 /* Sold filter button style */
 .fb[data-sold]{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
 .fb[data-sold].active{background:#b91c1c;color:white;border-color:#b91c1c}
@@ -101,17 +123,81 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 /* Recommendation detail modal */
 #recModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:1rem}
 #recModal.open{display:flex}
-.rec-modal-inner{background:white;border-radius:20px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
-.rec-modal-header{background:linear-gradient(135deg,#26666b,#145960);padding:20px;border-radius:20px 20px 0 0;color:white;text-align:center}
-.rec-modal-book-img{width:80px;height:100px;object-fit:cover;border-radius:10px;margin:0 auto 10px;display:block;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
-.rec-modal-book-title{font-size:1rem;font-weight:900}
-.rec-modal-body{padding:20px}
-.rec-alumni-badge{background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-block;margin-bottom:14px}
-.rec-modal-kid{font-size:.85rem;color:#888;margin-bottom:14px}
-.rec-modal-q-label{font-size:.72rem;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:3px}
-.rec-modal-q-text{font-size:.9rem;color:#444;line-height:1.6;margin-bottom:14px;font-style:italic}
-.rec-modal-photo{width:100%;border-radius:12px;margin:10px 0}
-.rec-modal-close{background:#f5f5f5;color:#555;border:none;border-radius:10px;padding:11px;width:100%;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif}
+/* Modal shell */
+.rec-modal-inner{
+  background:white;border-radius:20px;
+  width:min(640px,96vw);
+  height:min(440px,90vh);
+  display:flex;flex-direction:column;
+  box-shadow:0 12px 40px rgba(0,0,0,0.35);
+  direction:rtl;overflow:hidden;
+}
+/* Header — fixed */
+.rec-modal-header{
+  background:linear-gradient(135deg,#26666b,#145960);
+  padding:14px 16px;
+  border-radius:20px 20px 0 0;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.rec-modal-header-title{color:white;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.rec-modal-close-x{background:rgba(255,255,255,0.2);color:white;border:none;border-radius:50%;width:32px;height:32px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rec-modal-close-x:hover{background:rgba(255,255,255,0.35)}
+/* Body — two equal columns, no scroll */
+.rec-modal-body{
+  display:flex;flex-direction:row;
+  flex:1;min-height:0;overflow:hidden;
+  direction:rtl;
+}
+/* RIGHT column — book cover fills entire half */
+.rec-modal-right{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:8px;padding:12px;
+  background:#f9fafb;
+  border-left:1px solid #eee;
+  overflow:hidden;
+}
+.rec-modal-book-img{
+  width:100%;
+  flex:1;min-height:0;
+  object-fit:cover;
+  border-radius:16px;
+  border:1px solid #fff;
+  box-shadow:0 4px 16px rgba(0,0,0,0.15);
+  display:block;
+}
+.rec-modal-book-title{font-size:.82rem;font-weight:700;color:#1a3a3a;text-align:right;direction:rtl;width:100%;flex-shrink:0}
+.rec-modal-book-author{font-size:.72rem;color:#888;text-align:right;direction:rtl;width:100%;flex-shrink:0}
+/* LEFT column — reviewer, scrollable if needed */
+.rec-modal-left{
+  flex:1;min-width:0;
+  padding:14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  overflow-y:auto;
+}
+/* Kid header — name+class left, avatar right */
+.rec-modal-kid-header{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:10px;direction:rtl}
+.rec-modal-kid-info{display:flex;flex-direction:column;gap:2px;flex:1;text-align:right}
+.rec-modal-kid-name{font-size:.95rem;font-weight:700;color:#1a3a3a}
+.rec-modal-kid-class{font-size:.75rem;color:#888}
+.rec-modal-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #EDCD67;flex-shrink:0}
+/* Questions */
+.rec-modal-q-label{font-weight:700;font-size:15px;line-height:18px;text-align:right;color:#CA8104;direction:rtl}
+.rec-modal-q-text{font-weight:500;font-size:13px;line-height:18px;text-align:right;color:#000;direction:rtl}
+/* Pager */
+.rec-modal-pager{display:none;align-items:center;justify-content:center;gap:14px;padding:10px;border-top:1px solid #eee;background:#fafafa;border-radius:0 0 20px 20px;flex-shrink:0}
+.rec-modal-pager-btn{background:#26666b;color:white;border:none;border-radius:8px;padding:5px 14px;cursor:pointer;font-size:1rem}
+.rec-modal-pager-btn:hover{background:#145960}
+.rec-modal-pager-label{font-size:.85rem;font-weight:700;color:#26666b}
+/* Mobile */
+@media(max-width:500px){
+  .rec-modal-inner{width:calc(100vw - 2rem);height:auto;max-height:90vh}
+  .rec-modal-body{flex-direction:column;overflow-y:auto}
+  .rec-modal-right{border-left:none;border-bottom:1px solid #eee;flex-direction:row;align-items:center;gap:12px;padding:12px;flex:none}
+  .rec-modal-book-img{width:100px;height:100px;flex:none}
+  .rec-modal-left{overflow-y:visible}
+}
 </style>
 </head>
 <body>
@@ -169,25 +255,44 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 <!-- RECOMMENDATION MODAL -->
 <div id="recModal" onclick="closeRecModal()">
   <div class="rec-modal-inner" onclick="event.stopPropagation()">
+
+    <!-- Header -->
     <div class="rec-modal-header">
-      <img class="rec-modal-book-img" id="recModalBookImg" src="" alt="">
-      <div class="rec-modal-book-title" id="recModalBookTitle"></div>
+      <div class="rec-modal-header-title">⭐ תלמידי ויצמן ממליצים</div>
+      <button class="rec-modal-close-x" onclick="closeRecModal()">✕</button>
     </div>
+
+    <!-- Body: RIGHT=book, LEFT=reviewer (RTL order) -->
     <div class="rec-modal-body">
-      <div class="rec-alumni-badge">⭐ ממליצים בוגרי ויצמן</div>
-      <div id="recModalPager" style="display:none;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;font-size:13px;color:#92400e;font-weight:700">
-        <button onclick="recModalNav(-1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:15px">◀</button>
-        <span id="recModalPagerLabel"></span>
-        <button onclick="recModalNav(1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:15px">▶</button>
+      <!-- LEFT column: reviewer info -->
+      <div class="rec-modal-left">
+        <div class="rec-modal-kid-header">
+          <div class="rec-modal-kid-info">
+            <div class="rec-modal-kid-name" id="recModalKidName"></div>
+            <div class="rec-modal-kid-class" id="recModalKidClass"></div>
+          </div>
+          <img class="rec-modal-avatar" id="recModalAvatar" src="" alt="">
+        </div>
+        <div class="rec-modal-q-label" id="recModalQ1Label"></div>
+        <div class="rec-modal-q-text" id="recModalQ1"></div>
+        <div class="rec-modal-q-label" id="recModalQ2Label"></div>
+        <div class="rec-modal-q-text" id="recModalQ2"></div>
       </div>
-      <div class="rec-modal-kid" id="recModalKid"></div>
-      <img class="rec-modal-photo" id="recModalPhoto" src="" alt="" style="display:none">
-      <div class="rec-modal-q-label" id="recModalQ1Label"></div>
-      <div class="rec-modal-q-text" id="recModalQ1"></div>
-      <div class="rec-modal-q-label" id="recModalQ2Label"></div>
-      <div class="rec-modal-q-text" id="recModalQ2"></div>
-      <button class="rec-modal-close" onclick="closeRecModal()">סגור</button>
+      <!-- RIGHT column: book cover -->
+      <div class="rec-modal-right">
+        <img class="rec-modal-book-img" id="recModalBookImg" src="" alt="">
+        <div class="rec-modal-book-title" id="recModalBookTitle"></div>
+        <div class="rec-modal-book-author" id="recModalBookAuthor"></div>
+      </div>
     </div>
+
+    <!-- Pager — RTL: ▶ = previous, ◀ = next -->
+    <div class="rec-modal-pager" id="recModalPager">
+      <button class="rec-modal-pager-btn" onclick="recModalNav(1)">▶</button>
+      <span class="rec-modal-pager-label" id="recModalPagerLabel"></span>
+      <button class="rec-modal-pager-btn" onclick="recModalNav(-1)">◀</button>
+    </div>
+
   </div>
 </div>
 
@@ -217,7 +322,7 @@ let approvedRecs = {};  // bookId -> array of approved recs
 let activeFilter = "הכל";
 let selectedIds = new Set();
 
-const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23fde68a'/%3E%3Ccircle cx='30' cy='22' r='11' fill='%23f59e0b'/%3E%3Cellipse cx='30' cy='48' rx='17' ry='12' fill='%23f59e0b'/%3E%3C/svg%3E";
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23fde68a'/%3E%3Ccircle cx='30' cy='22' r='11' fill='%23f59e0b'/%3E%3Cellipse cx='30' cy='46' rx='16' ry='11' fill='%23f59e0b'/%3E%3C/svg%3E";
 
 const Q_ALL = { q1:'למה את/ה ממליץ/ה על הספר?',    q2:'מה הכי אהבת בו?' };
 const Q_PAJ = { q1:'מה הספר מלמד ולמה הוא כייפי?', q2:'למה כדאי להורים לקנות את הספר?' };
@@ -244,14 +349,17 @@ function setFilter(cat, el){
   render();
 }
 
+const AVATAR_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FF9FF3','#FFEAA7','#A29BFE','#FD79A8','#6C5CE7','#00CEC9'];
+
+function avatarColor(idx){ return AVATAR_COLORS[idx % AVATAR_COLORS.length]; }
+
 function recPortraits(recList) {
-  // up to 3 overlapping circles
   const shown = recList.slice(0,3);
-  return shown.map((r,i) => {
+  return `<div class="rec-portraits">${shown.map((r,i) => {
     const src = r.image_url || DEFAULT_AVATAR;
-    const offset = i * 22;
-    return `<img src="${src}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #fbbf24;position:absolute;right:${offset}px;top:0;background:#fde68a" onerror="this.src=DEFAULT_AVATAR">`;
-  }).join('');
+    const color = avatarColor(i);
+    return `<img class="rec-portrait" src="${src}" width="60" height="60" style="border-color:${color};z-index:${10-i}" onerror="this.src='${DEFAULT_AVATAR}'">`;
+  }).join('')}</div>`;
 }
 
 function cardHtml(b){
@@ -262,17 +370,14 @@ function cardHtml(b){
   const recList = approvedRecs[String(b.id)] || [];
   const hasRec = recList.length > 0;
 
-  // Yellow rec button overlay
+  // Yellow rec button overlay — flush left
   let recBtn = '';
   if (hasRec) {
-    const totalW = 44 + (Math.min(recList.length,3)-1)*22;
     recBtn = `
-<div class="rec-yellow-btn" onclick="event.stopPropagation();openRecModal('${b.id}')">
+<button class="rec-yellow-btn" onclick="event.stopPropagation();openRecModal('${b.id}')">
+  ${recPortraits(recList)}
   <div class="rec-btn-text">קרא<br>&lt;&lt;המלצות</div>
-  <div style="position:relative;width:${totalW}px;height:44px;flex-shrink:0">
-    ${recPortraits(recList)}
-  </div>
-</div>`;
+</button>`;
   }
 
   // Sold overlay
@@ -387,30 +492,27 @@ function loadRecModal(bookId, idx) {
   recModalIdx = idx;
   const rec = recList[idx];
 
+  // Book info (right column)
   document.getElementById('recModalBookImg').src = b.img || '';
   document.getElementById('recModalBookTitle').textContent = b.title || '';
+  document.getElementById('recModalBookAuthor').textContent = b.author || '';
 
-  const kidLine = rec.kid_name ? rec.kid_name + (rec.class_number ? ', כיתה ' + rec.class_number : '') : '';
-  document.getElementById('recModalKid').textContent = kidLine ? '— ' + kidLine : '';
+  // Kid info (left column)
+  document.getElementById('recModalKidName').textContent = rec.kid_name || '';
+  const classText = rec.class_number ? 'כיתה ' + rec.class_number + ' • ממליצה' : 'ממליצה';
+  document.getElementById('recModalKidClass').textContent = classText;
 
+  // Avatar
+  const avatar = document.getElementById('recModalAvatar');
+  avatar.src = rec.image_url || DEFAULT_AVATAR;
+  avatar.onerror = () => { avatar.src = DEFAULT_AVATAR; };
+
+  // Questions
   const qs = rec.category === 'toddler' ? Q_PAJ : Q_ALL;
   document.getElementById('recModalQ1Label').textContent = qs.q1;
   document.getElementById('recModalQ1').textContent = rec.q1_answer || '';
   document.getElementById('recModalQ2Label').textContent = qs.q2;
   document.getElementById('recModalQ2').textContent = rec.q2_answer || '';
-
-  const photo = document.getElementById('recModalPhoto');
-  if (rec.image_url) {
-    photo.src = rec.image_url;
-    photo.style.display = 'block';
-  } else {
-    photo.src = DEFAULT_AVATAR;
-    photo.style.display = 'block';
-    photo.style.width = '80px';
-    photo.style.height = '80px';
-    photo.style.borderRadius = '50%';
-    photo.style.margin = '0 auto 12px';
-  }
 
   // Pager
   const pager = document.getElementById('recModalPager');
