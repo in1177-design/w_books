@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 17:05 -->
+<!-- built: 17:30 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>⚙️ ניהול ספרים</title>
 <style>
@@ -343,7 +343,8 @@ const booksCol = collection(db, 'books');
 const recsCol  = collection(db, 'recommendations');
 
 const CATS = ["ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרי קריאה","משחקים","חוברות לימוד","PJ ספריית","ספרים עבור מבוגרים"];
-const ALL_CATS = ["הכל",...CATS];
+const SOLD_CAT = "כבר נמכר";
+const ALL_CATS = ["הכל",...CATS, SOLD_CAT];
 const PHONE = "972544934904";
 const RECOMMEND_BASE = 'https://in1177-design.github.io/w_books/recommend.html';
 
@@ -364,7 +365,12 @@ let modBookIdCurrent = null;
 let modRecIndex = 0;
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
-function matchFilter(b){ return activeFilter === "הכל" || getCats(b).includes(activeFilter); }
+function matchFilter(b){
+  if (activeFilter === SOLD_CAT) return b.sold;
+  if (b.sold) return false;
+  if (activeFilter === "הכל") return true;
+  return getCats(b).includes(activeFilter);
+}
 
 function buildFilters(id){
   document.getElementById(id).innerHTML = ALL_CATS.map((c,i) =>

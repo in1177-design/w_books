@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 15:20 -->
+<!-- built: 17:30 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ספרים יד שניה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -89,16 +89,14 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 @media(max-width:767px){.zoom-modal-inner{max-width:calc(100vw - 32px)}}
 
 /* === RECOMMENDATION DISPLAY === */
-/* Badge on card image */
-.rec-badge-alumni{position:absolute;bottom:52px;right:0;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-size:9px;font-weight:700;padding:3px 8px;border-radius:12px 0 0 12px;z-index:3;box-shadow:0 2px 8px rgba(245,158,11,0.4)}
-/* Recommendation strip below card-body */
-.rec-strip{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-top:2px solid #fcd34d;padding:10px 12px;direction:rtl}
-.rec-strip-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.rec-strip-star{font-size:1rem}
-.rec-strip-title{font-size:.75rem;font-weight:900;color:#92400e}
-.rec-strip-kid{font-size:.72rem;color:#a16207;font-weight:600}
-.rec-strip-q1{font-size:.78rem;color:#78350f;line-height:1.5;font-style:italic;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.rec-strip-img{width:100%;border-radius:8px;margin-top:6px;max-height:120px;object-fit:cover}
+/* Yellow recommendation button on card image */
+.rec-yellow-btn{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);background:#fbbf24;border:none;border-radius:30px;padding:7px 14px 7px 10px;display:flex;align-items:center;gap:10px;cursor:pointer;z-index:5;box-shadow:0 3px 12px rgba(0,0,0,0.25);white-space:nowrap;min-width:0}
+.rec-yellow-btn:hover{background:#f59e0b;transform:translateX(-50%) scale(1.03)}
+.rec-btn-text{font-size:11px;font-weight:900;color:#78350f;line-height:1.3;direction:rtl;text-align:right}
+@media(max-width:767px){.rec-yellow-btn{padding:5px 10px 5px 8px;bottom:44px}.rec-btn-text{font-size:10px}}
+/* Sold filter button style */
+.fb[data-sold]{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.fb[data-sold].active{background:#b91c1c;color:white;border-color:#b91c1c}
 
 /* Recommendation detail modal */
 #recModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:1rem}
@@ -177,12 +175,17 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
     </div>
     <div class="rec-modal-body">
       <div class="rec-alumni-badge">⭐ ממליצים בוגרי ויצמן</div>
+      <div id="recModalPager" style="display:none;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;font-size:13px;color:#92400e;font-weight:700">
+        <button onclick="recModalNav(-1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:15px">◀</button>
+        <span id="recModalPagerLabel"></span>
+        <button onclick="recModalNav(1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:15px">▶</button>
+      </div>
       <div class="rec-modal-kid" id="recModalKid"></div>
+      <img class="rec-modal-photo" id="recModalPhoto" src="" alt="" style="display:none">
       <div class="rec-modal-q-label" id="recModalQ1Label"></div>
       <div class="rec-modal-q-text" id="recModalQ1"></div>
       <div class="rec-modal-q-label" id="recModalQ2Label"></div>
       <div class="rec-modal-q-text" id="recModalQ2"></div>
-      <img class="rec-modal-photo" id="recModalPhoto" src="" alt="" style="display:none">
       <button class="rec-modal-close" onclick="closeRecModal()">סגור</button>
     </div>
   </div>
@@ -205,25 +208,34 @@ const db = getFirestore(app);
 const booksCol = collection(db, 'books');
 const recsCol  = collection(db, 'recommendations');
 
-const ALL_CATS = ["הכל","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרים עבור מבוגרים","משחקים","חוברות לימוד","ספריית פיג'מה"];
+const ALL_CATS = ["הכל","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרים עבור מבוגרים","משחקים","חוברות לימוד","PJ ספריית","כבר נמכר"];
+const SOLD_CAT = "כבר נמכר";
 const PHONE = "972544923904";
 
 let books = [];
-let approvedRecs = {};  // bookId -> rec (status=approved only)
+let approvedRecs = {};  // bookId -> array of approved recs
 let activeFilter = "הכל";
 let selectedIds = new Set();
+
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23fde68a'/%3E%3Ccircle cx='30' cy='22' r='11' fill='%23f59e0b'/%3E%3Cellipse cx='30' cy='48' rx='17' ry='12' fill='%23f59e0b'/%3E%3C/svg%3E";
 
 const Q_ALL = { q1:'למה את/ה ממליץ/ה על הספר?',    q2:'מה הכי אהבת בו?' };
 const Q_PAJ = { q1:'מה הספר מלמד ולמה הוא כייפי?', q2:'למה כדאי להורים לקנות את הספר?' };
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
-function matchFilter(b){ return activeFilter === "הכל" || getCats(b).includes(activeFilter); }
+function matchFilter(b){
+  if (activeFilter === SOLD_CAT) return b.sold;
+  if (b.sold) return false; // hide sold from all other filters
+  if (activeFilter === "הכל") return true;
+  return getCats(b).includes(activeFilter);
+}
 
 function buildFilters(){
-  document.getElementById('filters').innerHTML = ALL_CATS.map(c =>
-    `<button class="fb ${c===activeFilter?'active':''}" onclick="setFilter('${c}',this)">${c}</button>`
+  document.getElementById('filters').innerHTML = ALL_CATS.map((c,i) =>
+    `<button class="fb ${c===activeFilter?'active':''}" data-ci="${i}" ${c===SOLD_CAT?"data-sold":""} onclick="setFilterByIdx(${i},this)">${c}</button>`
   ).join('');
 }
+function setFilterByIdx(i,el){ setFilter(ALL_CATS[i],el); }
 
 function setFilter(cat, el){
   activeFilter = cat;
@@ -232,44 +244,49 @@ function setFilter(cat, el){
   render();
 }
 
+function recPortraits(recList) {
+  // up to 3 overlapping circles
+  const shown = recList.slice(0,3);
+  return shown.map((r,i) => {
+    const src = r.image_url || DEFAULT_AVATAR;
+    const offset = i * 22;
+    return `<img src="${src}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #fbbf24;position:absolute;right:${offset}px;top:0;background:#fde68a" onerror="this.src=DEFAULT_AVATAR">`;
+  }).join('');
+}
+
 function cardHtml(b){
   const cats = getCats(b);
   const firstCat = cats.map(c => `<span class="category-badge">${c}</span>`).join('');
   const selected = selectedIds.has(String(b.id));
   const isNew = b.createdAt?.toMillis?.() > Date.now() - 3*24*60*60*1000;
-  const rec = approvedRecs[String(b.id)];
+  const recList = approvedRecs[String(b.id)] || [];
+  const hasRec = recList.length > 0;
 
-  // Recommendation strip
-  let recStrip = '';
-  let recAlumniBadge = '';
-  if (rec) {
-    recAlumniBadge = `<div class="rec-badge-alumni">⭐ בוגרי ויצמן ממליצים</div>`;
-    const q1Short = (rec.q1_answer||'').substring(0,120);
-    const kidLine = rec.kid_name ? (rec.kid_name + (rec.class_number ? ', כיתה ' + rec.class_number : '')) : '';
-    const photoThumb = rec.image_url ? `<img class="rec-strip-img" src="${rec.image_url}" alt="">` : '';
-    recStrip = `
-<div class="rec-strip" onclick="event.stopPropagation();openRecModal('${b.id}')">
-  <div class="rec-strip-header">
-    <span class="rec-strip-star">⭐</span>
-    <div>
-      <div class="rec-strip-title">ממליצים בוגרי ויצמן</div>
-      ${kidLine ? `<div class="rec-strip-kid">${kidLine}</div>` : ''}
-    </div>
+  // Yellow rec button overlay
+  let recBtn = '';
+  if (hasRec) {
+    const totalW = 44 + (Math.min(recList.length,3)-1)*22;
+    recBtn = `
+<div class="rec-yellow-btn" onclick="event.stopPropagation();openRecModal('${b.id}')">
+  <div class="rec-btn-text">קרא<br>&lt;&lt;המלצות</div>
+  <div style="position:relative;width:${totalW}px;height:44px;flex-shrink:0">
+    ${recPortraits(recList)}
   </div>
-  <div class="rec-strip-q1">${q1Short}${(rec.q1_answer||'').length > 120 ? '...' : ''}</div>
-  ${photoThumb}
 </div>`;
   }
+
+  // Sold overlay
+  const soldOverlay = b.sold ? `<div class="sold-overlay"><span class="sold-label">כבר נמכר 🏠</span></div>` : '';
 
   return `
 <div class="card ${b.sold?'sold':''} ${selected?'selected':''}" onclick="toggleSelect('${b.id}')" data-id="${b.id}">
   <div class="img-container">
     <img src="${b.img||''}" alt="${b.title}" loading="lazy">
-    <div class="sold-overlay"><span class="sold-label">נמכר</span></div>
+    ${soldOverlay}
     <div class="cb-wrap"><span class="cb-check">✓</span></div>
     <button class="zoom-btn" onclick="event.stopPropagation();openZoomModal('${b.id}')" title="הגדל תמונה">⤢</button>
-    ${isNew ? '<span class="badge-new">✨ חדש</span>' : ''}
-    ${recAlumniBadge}
+    ${isNew && !b.sold ? '<span class="badge-new">✨ חדש</span>' : ''}
+    ${recBtn}
     <div class="overlay-title">${b.title||'ספר'}</div>
   </div>
   <div class="card-body">
@@ -279,7 +296,6 @@ function cardHtml(b){
     </div>
     <div class="price-circle">${b.price}<br>&#8362;</div>
   </div>
-  ${recStrip}
 </div>`;
 }
 
@@ -359,10 +375,17 @@ function openZoomModal(id){
 
 function closeZoomModal(){ document.getElementById('zoomModal').classList.remove('open'); }
 
-function openRecModal(bookId){
+let recModalBookId = null;
+let recModalIdx = 0;
+
+function loadRecModal(bookId, idx) {
   const b = books.find(x => String(x.id) === String(bookId));
-  const rec = approvedRecs[String(bookId)];
-  if (!b || !rec) return;
+  const recList = approvedRecs[String(bookId)] || [];
+  if (!b || !recList.length) return;
+  idx = Math.max(0, Math.min(idx, recList.length-1));
+  recModalBookId = bookId;
+  recModalIdx = idx;
+  const rec = recList[idx];
 
   document.getElementById('recModalBookImg').src = b.img || '';
   document.getElementById('recModalBookTitle').textContent = b.title || '';
@@ -381,9 +404,31 @@ function openRecModal(bookId){
     photo.src = rec.image_url;
     photo.style.display = 'block';
   } else {
-    photo.style.display = 'none';
+    photo.src = DEFAULT_AVATAR;
+    photo.style.display = 'block';
+    photo.style.width = '80px';
+    photo.style.height = '80px';
+    photo.style.borderRadius = '50%';
+    photo.style.margin = '0 auto 12px';
   }
+
+  // Pager
+  const pager = document.getElementById('recModalPager');
+  if (recList.length > 1) {
+    pager.style.display = 'flex';
+    document.getElementById('recModalPagerLabel').textContent = (idx+1) + ' / ' + recList.length;
+  } else {
+    pager.style.display = 'none';
+  }
+}
+
+function openRecModal(bookId){
+  loadRecModal(bookId, 0);
   document.getElementById('recModal').classList.add('open');
+}
+
+function recModalNav(dir){
+  loadRecModal(recModalBookId, recModalIdx + dir);
 }
 
 function closeRecModal(){ document.getElementById('recModal').classList.remove('open'); }
@@ -402,13 +447,15 @@ onSnapshot(booksCol, (snap) => {
   updateFab();
 });
 
-// Only show approved recommendations
+// Only show approved recommendations (store all per book)
 onSnapshot(recsCol, (snap) => {
   approvedRecs = {};
   snap.docs.forEach(d => {
     const rec = {...d.data(), _id: d.id};
     if (rec.status === 'approved') {
-      approvedRecs[String(rec.book_id)] = rec;
+      const key = String(rec.book_id);
+      if (!approvedRecs[key]) approvedRecs[key] = [];
+      approvedRecs[key].push(rec);
     }
   });
   render();
@@ -416,6 +463,7 @@ onSnapshot(recsCol, (snap) => {
 
 window.toggleSelect = toggleSelect;
 window.setFilter = setFilter;
+window.setFilterByIdx = setFilterByIdx;
 window.openOrderModal = openOrderModal;
 window.closeOrderModal = closeOrderModal;
 window.removeFromOrder = removeFromOrder;
@@ -425,6 +473,7 @@ window.closeZoomModal = closeZoomModal;
 window.handleWaBtn = handleWaBtn;
 window.openRecModal = openRecModal;
 window.closeRecModal = closeRecModal;
+window.recModalNav = recModalNav;
 </script>
 </body>
 </html>
