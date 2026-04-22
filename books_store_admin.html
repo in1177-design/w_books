@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 16:10 -->
+<!-- built: 17:05 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>⚙️ ניהול ספרים</title>
 <style>
@@ -277,9 +277,14 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 <!-- === MODERATION MODAL === -->
 <div class="modal-bg" id="modModal">
   <div class="modal" style="max-width:420px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <h3 style="margin:0;color:#f59e0b">⭐ ניהול המלצה</h3>
       <button onclick="closeModModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">×</button>
+    </div>
+    <div id="modPager" style="display:none;align-items:center;justify-content:center;gap:10px;background:#fef3c7;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-size:12px;font-weight:bold;color:#92400e">
+      <button onclick="modNavRec(-1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px">◀</button>
+      <span id="modPagerLabel"></span>
+      <button onclick="modNavRec(1)" style="background:#f59e0b;color:white;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px">▶</button>
     </div>
 
     <div class="mod-book-info">
@@ -354,7 +359,9 @@ let genLinkUrl = '';
 
 // mod modal state
 let modRecId = null;
-let modPhotoVal = null;  // current image_url in modal (null = deleted, string = existing or new)
+let modPhotoVal = null;
+let modBookIdCurrent = null;
+let modRecIndex = 0;
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
 function matchFilter(b){ return activeFilter === "הכל" || getCats(b).includes(activeFilter); }
@@ -518,42 +525,63 @@ window.closeGenLink = function() {
 const Q_ALL  = { q1:'למה את/ה ממליץ/ה על הספר?',    q2:'מה הכי אהבת בו?' };
 const Q_PAJ  = { q1:'מה הספר מלמד ולמה הוא כייפי?', q2:'למה כדאי להורים לקנות את הספר?' };
 
-window.openModModal = async function(bookId) {
+function loadModRec(bookId, index) {
   const recList = recs[String(bookId)] || [];
   if (!recList.length) return;
-  // Prefer first pending, else first approved
-  const rec = recList.find(r => r.status === 'pending') || recList[0];
+  // Sort: pending first, then approved
+  const sorted = [...recList].sort((a,b) => (a.status==='pending'?0:1)-(b.status==='pending'?0:1));
+  index = Math.max(0, Math.min(index, sorted.length-1));
+  modRecIndex = index;
+  modBookIdCurrent = bookId;
+  const rec = sorted[index];
   modRecId = rec._id;
   modPhotoVal = rec.image_url || null;
 
   const b = books.find(x => String(x.id) === String(bookId));
   document.getElementById('modBookImg').src = b ? (b.img||'') : '';
   document.getElementById('modBookTitle').textContent = b ? b.title : '';
-  document.getElementById('modKidHeader').textContent = rec.kid_name + (rec.class_number ? ' · כיתה ' + rec.class_number : '');
+  document.getElementById('modKidHeader').textContent = (rec.kid_name||'') + (rec.class_number ? ' · כיתה ' + rec.class_number : '');
   document.getElementById('modKidName').value = rec.kid_name || '';
   document.getElementById('modClass').value = rec.class_number || '';
   document.getElementById('modQ1').value = rec.q1_answer || '';
   document.getElementById('modQ2').value = rec.q2_answer || '';
 
-  // Questions labels
   const qs = rec.category === 'toddler' ? Q_PAJ : Q_ALL;
   document.getElementById('modQ1Label').textContent = qs.q1;
   document.getElementById('modQ2Label').textContent = qs.q2;
 
-  // Photo
   updateModPhoto();
+
+  // Pager
+  const pager = document.getElementById('modPager');
+  if (sorted.length > 1) {
+    pager.style.display = 'flex';
+    document.getElementById('modPagerLabel').textContent = (index+1) + ' / ' + sorted.length;
+  } else {
+    pager.style.display = 'none';
+  }
 
   // Publish button
   const pub = document.getElementById('modPublishBtn');
   if (rec.status === 'approved') {
-    pub.textContent = '✅ כבר מאושרת — שמור שינויים';
+    pub.textContent = '✅ מאושרת — שמור שינויים';
     pub.style.background = 'linear-gradient(90deg,#6b7280,#4b5563)';
   } else {
     pub.textContent = '✅ פרסם המלצה';
     pub.style.background = 'linear-gradient(90deg,#10b981,#059669)';
   }
+}
 
+window.openModModal = async function(bookId) {
+  const recList = recs[String(bookId)] || [];
+  if (!recList.length) return;
+  loadModRec(bookId, 0);
   document.getElementById('modModal').classList.add('open');
+};
+
+window.modNavRec = function(dir) {
+  if (!modBookIdCurrent) return;
+  loadModRec(modBookIdCurrent, modRecIndex + dir);
 };
 
 function updateModPhoto() {
@@ -783,7 +811,9 @@ window.addOneBook = async function(){
 
 // Expose for inline HTML
 window.setFilter = setFilter;
+window.setFilterByIndex = setFilterByIndex;
 window.toggleSelect = toggleSelect;
+window.render = render;
 
 /* PASSWORD */
 window.checkPass = function(){

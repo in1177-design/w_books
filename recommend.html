@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 15:20 -->
+<!-- built: 17:05 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>המלצת ספר — יריד ויצמן</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -38,7 +38,8 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
 .upload-icon{font-size:2.5rem;margin-bottom:6px}
 .upload-text{font-size:.85rem;font-weight:600}
 .upload-sub{font-size:.75rem;color:#aaa;margin-top:3px}
-#imgPreview{width:100%;border-radius:12px;margin-top:10px;display:none;max-height:240px;object-fit:cover}
+#imgPreview{width:100%;max-width:100%;max-height:220px;object-fit:contain;border-radius:12px;margin-top:10px;display:none;background:#f5f5f5}
+.remove-photo-btn{display:none;width:100%;margin-top:6px;padding:7px;background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;font-size:.8rem;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:600}
 
 .submit-btn{width:100%;background:linear-gradient(90deg,#26666b,#145960);color:white;border:none;border-radius:14px;padding:16px;font-size:1rem;font-weight:700;cursor:pointer;margin:16px 0 0;font-family:'Heebo',sans-serif;box-shadow:0 4px 16px rgba(38,102,107,0.35);transition:.2s}
 .submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(38,102,107,0.45)}
@@ -115,6 +116,7 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
       <input type="file" id="imgInput" accept="image/*" onchange="handleImg(this.files[0])">
     </div>
     <img id="imgPreview" src="" alt="תצוגה מקדימה">
+    <button class="remove-photo-btn" id="removePhotoBtn" onclick="removePhoto()">🗑️ הסר תמונה</button>
 
     <button class="submit-btn" id="submitBtn" onclick="submitRec()">✨ שלחי את ההמלצה שלי!</button>
   </div>
@@ -215,17 +217,44 @@ function show(id) {
   document.getElementById(id).style.display = (id === 'mainContent') ? 'block' : 'block';
 }
 
-window.handleImg = function(file) {
+function resizeImg(dataUrl, maxSize) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = dataUrl;
+  });
+}
+
+window.handleImg = async function(file) {
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { alert('התמונה גדולה מדי (מקסימום 5MB)'); return; }
+  if (file.size > 15 * 1024 * 1024) { alert('התמונה גדולה מדי (מקסימום 15MB)'); return; }
   const reader = new FileReader();
-  reader.onload = e => {
-    imgBase64 = e.target.result;
+  reader.onload = async e => {
+    imgBase64 = await resizeImg(e.target.result, 800);
     const prev = document.getElementById('imgPreview');
     prev.src = imgBase64;
     prev.style.display = 'block';
+    document.getElementById('removePhotoBtn').style.display = 'block';
+    document.querySelector('.upload-zone').style.display = 'none';
   };
   reader.readAsDataURL(file);
+};
+
+window.removePhoto = function() {
+  imgBase64 = null;
+  const prev = document.getElementById('imgPreview');
+  prev.src = '';
+  prev.style.display = 'none';
+  document.getElementById('removePhotoBtn').style.display = 'none';
+  document.querySelector('.upload-zone').style.display = 'block';
+  document.getElementById('imgInput').value = '';
 };
 
 window.submitRec = async function() {
