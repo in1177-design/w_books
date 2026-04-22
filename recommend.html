@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<!-- built: 15:20 -->
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>המלצת ספר — יריד ויצמן</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Heebo',Arial,sans-serif}
+body{background:linear-gradient(135deg,#fffbd7 0%,#fef3c7 100%);min-height:100vh;direction:rtl;padding-bottom:40px}
+.header{background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);padding:14px 16px;border-bottom:2px solid rgba(101,75,68,0.15);text-align:center}
+.header h1{font-size:1.3rem;font-weight:900;color:#654B44}
+.header p{font-size:.85rem;color:#654B44;font-weight:500;margin-top:2px}
+
+.book-hero{background:linear-gradient(135deg,#26666b,#145960);margin:16px;border-radius:20px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(38,102,107,0.3)}
+.book-hero img{width:90px;height:120px;object-fit:cover;border-radius:12px;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.book-hero-info{color:white}
+.book-hero-title{font-size:1.1rem;font-weight:900;line-height:1.3;margin-bottom:4px}
+.book-hero-author{font-size:.85rem;opacity:.8}
+.book-hero-cat{font-size:.75rem;background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;display:inline-block;margin-top:6px}
+
+.greeting{text-align:center;padding:20px 16px 8px;font-size:1.2rem;font-weight:900;color:#654B44}
+.greeting span{color:#26666b}
+
+.form-wrap{margin:8px 16px;background:white;border-radius:20px;padding:20px;box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.form-label{display:block;font-size:.85rem;font-weight:700;color:#654B44;margin-bottom:6px;margin-top:14px}
+.form-label:first-child{margin-top:0}
+.form-label span{color:#e74c3c}
+textarea{width:100%;padding:12px;border:2px solid #e0d5c0;border-radius:12px;font-size:.9rem;font-family:'Heebo',sans-serif;resize:none;color:#333;transition:.2s;min-height:90px}
+textarea:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rgba(38,102,107,0.12)}
+textarea::placeholder{color:#bbb}
+input[type=text]{width:100%;padding:10px 12px;border:2px solid #e0d5c0;border-radius:10px;font-size:.9rem;font-family:'Heebo',sans-serif;color:#333;transition:.2s}
+input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rgba(38,102,107,0.12)}
+
+.upload-zone{border:2px dashed #c084fc;border-radius:14px;padding:22px;text-align:center;color:#7c2fa0;cursor:pointer;background:#fdf4ff;margin-top:8px;transition:.2s}
+.upload-zone:hover{background:#f5e8ff;border-color:#7c2fa0}
+.upload-zone input{display:none}
+.upload-icon{font-size:2.5rem;margin-bottom:6px}
+.upload-text{font-size:.85rem;font-weight:600}
+.upload-sub{font-size:.75rem;color:#aaa;margin-top:3px}
+#imgPreview{width:100%;border-radius:12px;margin-top:10px;display:none;max-height:240px;object-fit:cover}
+
+.submit-btn{width:100%;background:linear-gradient(90deg,#26666b,#145960);color:white;border:none;border-radius:14px;padding:16px;font-size:1rem;font-weight:700;cursor:pointer;margin:16px 0 0;font-family:'Heebo',sans-serif;box-shadow:0 4px 16px rgba(38,102,107,0.35);transition:.2s}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(38,102,107,0.45)}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+/* SUCCESS */
+.success-wrap{display:none;text-align:center;padding:40px 20px}
+.success-icon{font-size:5rem;margin-bottom:16px;animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+.success-title{font-size:1.5rem;font-weight:900;color:#654B44;margin-bottom:8px}
+.success-msg{font-size:.95rem;color:#888;line-height:1.6}
+
+/* ERROR */
+.err-msg{color:#e74c3c;font-size:.8rem;margin-top:4px;display:none}
+
+/* LOADING */
+.page-loading{text-align:center;padding:60px 20px;color:#654B44;font-size:1.1rem;font-weight:600}
+
+/* NOT FOUND */
+.not-found{text-align:center;padding:60px 20px}
+.not-found h2{color:#654B44;margin-bottom:8px}
+.not-found p{color:#888}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📚 יריד ספרים — ויצמן</h1>
+  <p>כיתות ו' — בית ספר ויצמן</p>
+</div>
+
+<div id="pageLoading" class="page-loading">⏳ טוענת...</div>
+<div id="notFound" class="not-found" style="display:none">
+  <h2>😕 הקישור שגוי</h2>
+  <p>לא נמצא ספר. אנא בדקי את הקישור.</p>
+</div>
+<div id="alreadySubmitted" style="display:none" class="not-found">
+  <h2>✅ כבר שלחת המלצה!</h2>
+  <p>ההמלצה שלך התקבלה ותופיע אחרי אישור המנהלת.</p>
+</div>
+
+<div id="mainContent" style="display:none">
+  <div class="greeting">👋 שלום, <span id="greetName"></span>!</div>
+
+  <div class="book-hero" id="bookHero">
+    <img id="bookImg" src="" alt="">
+    <div class="book-hero-info">
+      <div class="book-hero-title" id="bookTitle"></div>
+      <div class="book-hero-author" id="bookAuthor"></div>
+      <div class="book-hero-cat" id="bookCat"></div>
+    </div>
+  </div>
+
+  <div class="form-wrap">
+    <label class="form-label">שם מלא <span>*</span></label>
+    <input type="text" id="kidNameInput" placeholder="שמי הוא...">
+
+    <label class="form-label">כיתה <span>*</span></label>
+    <input type="text" id="classInput" placeholder="לדוגמה: ו׳1">
+
+    <label class="form-label" id="q1Label">שאלה 1 <span>*</span></label>
+    <textarea id="q1" placeholder="..." rows="3"></textarea>
+    <div class="err-msg" id="q1Err">חובה למלא שדה זה</div>
+
+    <label class="form-label" id="q2Label">שאלה 2 <span>*</span></label>
+    <textarea id="q2" placeholder="..." rows="3"></textarea>
+    <div class="err-msg" id="q2Err">חובה למלא שדה זה</div>
+
+    <label class="form-label">📸 תמונה שלך עם הספר (אופציונלי)</label>
+    <div class="upload-zone" onclick="document.getElementById('imgInput').click()">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">לחצי להעלאת תמונה</div>
+      <div class="upload-sub">JPG / PNG — עד 5MB</div>
+      <input type="file" id="imgInput" accept="image/*" onchange="handleImg(this.files[0])">
+    </div>
+    <img id="imgPreview" src="" alt="תצוגה מקדימה">
+
+    <button class="submit-btn" id="submitBtn" onclick="submitRec()">✨ שלחי את ההמלצה שלי!</button>
+  </div>
+</div>
+
+<div id="successWrap" class="success-wrap">
+  <div class="success-icon">🎉</div>
+  <div class="success-title">תודה רבה!</div>
+  <div class="success-msg">ההמלצה שלך התקבלה בהצלחה.<br>היא תופיע בחנות אחרי שהמנהלת תאשר אותה.</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, addDoc, query, where, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCicKBTwcN1utsOAgKThEHjTAeovt4m_Ys",
+  authDomain: "weizmannbook.firebaseapp.com",
+  projectId: "weizmannbook",
+  storageBucket: "weizmannbook.firebasestorage.app",
+  messagingSenderId: "14338690162",
+  appId: "1:14338690162:web:10c1f5a931a9f34dd806eb"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(location.search);
+const bookId   = params.get('book_id');
+const kidName  = params.get('kid_name')  || '';
+const category = params.get('category')  || 'all';
+
+let bookData = null;
+let imgBase64 = null;
+
+/* --- QUESTION SETS --- */
+const Q_ALL = {
+  q1: 'למה את/ה ממליץ/ה על הספר?',
+  q2: 'מה הכי אהבת בו?'
+};
+const Q_PAJAMA = {
+  q1: 'מה הספר מלמד ולמה הוא כייפי?',
+  q2: 'למה כדאי להורים לקנות את הספר?'
+};
+
+function isPajama(cat) {
+  return cat && (cat.includes('ספריית פיג\'מה') || cat.includes('פעוטות') || cat === 'pajama' || cat === 'toddler');
+}
+
+async function init() {
+  if (!bookId) { show('notFound'); return; }
+
+  // Check already submitted by this kid+book
+  if (kidName) {
+    try {
+      const q = query(collection(db,'recommendations'),
+        where('book_id','==',bookId),
+        where('kid_name','==',kidName));
+      const snap = await getDocs(q);
+      if (!snap.empty) { show('alreadySubmitted'); return; }
+    } catch(e) {}
+  }
+
+  // Load book
+  try {
+    const docRef = doc(db, 'books', bookId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) { show('notFound'); return; }
+    bookData = { ...docSnap.data(), id: docSnap.id };
+  } catch(e) {
+    show('notFound'); return;
+  }
+
+  // Populate UI
+  document.getElementById('greetName').textContent = kidName || 'חבר/ה';
+  document.getElementById('kidNameInput').value = kidName;
+  document.getElementById('bookImg').src = bookData.img || '';
+  document.getElementById('bookTitle').textContent = bookData.title || '';
+  document.getElementById('bookAuthor').textContent = bookData.author || '';
+  const cats = Array.isArray(bookData.cat) ? bookData.cat.join(', ') : (bookData.cat || '');
+  document.getElementById('bookCat').textContent = cats;
+
+  const qs = (isPajama(category) || isPajama(cats)) ? Q_PAJAMA : Q_ALL;
+  document.getElementById('q1Label').innerHTML = qs.q1 + ' <span style="color:#e74c3c">*</span>';
+  document.getElementById('q2Label').innerHTML = qs.q2 + ' <span style="color:#e74c3c">*</span>';
+  document.getElementById('q1').placeholder = qs.q1;
+  document.getElementById('q2').placeholder = qs.q2;
+
+  show('mainContent');
+}
+
+function show(id) {
+  document.getElementById('pageLoading').style.display = 'none';
+  document.getElementById('notFound').style.display = 'none';
+  document.getElementById('alreadySubmitted').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('successWrap').style.display = 'none';
+  document.getElementById(id).style.display = (id === 'mainContent') ? 'block' : 'block';
+}
+
+window.handleImg = function(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { alert('התמונה גדולה מדי (מקסימום 5MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgBase64 = e.target.result;
+    const prev = document.getElementById('imgPreview');
+    prev.src = imgBase64;
+    prev.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.submitRec = async function() {
+  const kidNameVal  = document.getElementById('kidNameInput').value.trim();
+  const classVal    = document.getElementById('classInput').value.trim();
+  const q1Val       = document.getElementById('q1').value.trim();
+  const q2Val       = document.getElementById('q2').value.trim();
+
+  let valid = true;
+  if (!q1Val) { document.getElementById('q1Err').style.display='block'; valid=false; }
+  else document.getElementById('q1Err').style.display='none';
+  if (!q2Val) { document.getElementById('q2Err').style.display='block'; valid=false; }
+  else document.getElementById('q2Err').style.display='none';
+  if (!kidNameVal) { alert('נא למלא שם'); return; }
+  if (!valid) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ שולחת...';
+
+  const cats = Array.isArray(bookData.cat) ? bookData.cat.join(', ') : (bookData.cat || '');
+  const cat = (isPajama(category) || isPajama(cats)) ? 'toddler' : 'youth';
+
+  try {
+    await addDoc(collection(db, 'recommendations'), {
+      book_id:    bookId,
+      kid_name:   kidNameVal,
+      class_number: classVal,
+      category:   cat,
+      q1_answer:  q1Val,
+      q2_answer:  q2Val,
+      image_url:  imgBase64 || null,
+      status:     'pending',
+      created_at: serverTimestamp()
+    });
+    show('successWrap');
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '✨ שלחי את ההמלצה שלי!';
+    alert('שגיאה בשליחה. אנא נסי שוב.');
+    console.error(e);
+  }
+};
+
+init();
+</script>
+</body>
+</html>

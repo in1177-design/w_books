@@ -1,76 +1,62 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 07:46 -->
+<!-- built: 15:20 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ספרים יד שניה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Heebo',Arial,sans-serif}
 body{background:#fffbd7;min-height:100vh;direction:rtl}
-
 /* HEADER */
 .header{background:rgba(255,255,255,0.5);padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.4);position:sticky;top:0;z-index:10}
 .header h1{font-size:1.4rem;font-weight:900;color:#654B44}
 .header p{font-size:.85rem;color:#654B44;font-weight:600;margin-top:2px}
-
 /* PROJECT INFO */
 .project-info{background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:2px solid #FFF;border-radius:16px;padding:12px 16px;margin:12px 16px;text-align:center;color:#654B44;font-size:16px;font-weight:500;line-height:1.6}
-
 /* FILTERS */
 .controls{padding:12px 12px;display:flex;justify-content:center;position:sticky;top:64px;z-index:9;background:rgba(255,251,215,0.92);backdrop-filter:blur(6px);border-bottom:1px solid rgba(101,75,68,0.08)}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
 .fb{padding:5px 14px;border:2px solid #87a3a5;border-radius:20px;font-size:12px;background:#fffbd7;color:#000;cursor:pointer;transition:.15s;font-family:'Heebo',sans-serif}
 .fb.active{background:#654B44;color:white;border-color:#654B44;font-weight:700}
-
 /* GRID */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,300px));gap:16px;padding:16px;justify-content:center}
 @media(max-width:767px){
   .grid{grid-template-columns:repeat(2,1fr);gap:16px;padding:12px}
 }
-
 /* CARD */
 .card{background:#fff;border-radius:16px;overflow:hidden;border:5px solid transparent;display:flex;flex-direction:column;cursor:pointer;transition:border .15s,box-shadow .15s;box-shadow:0 4px 15px rgba(0,0,0,0.15)}
 .card.selected{border-color:#26666b;box-shadow:0 0 0 1px #27ae60}
 .card.sold{opacity:0.7}
-
 /* IMAGE CONTAINER */
-.img-container{width:100%;aspect-ratio:1/1;position:relative;overflow:hidden;border-radius: 11px;background:#2a2a4a}
+.img-container{width:100%;aspect-ratio:1/1;position:relative;overflow:hidden;border-radius:11px;background:#2a2a4a}
 .img-container img{width:100%;height:100%;object-fit:cover;display:block}
-
 /* SOLD OVERLAY */
 .sold-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;z-index:3}
 .sold .sold-overlay{display:flex}
 .sold-label{background:#ef4444;color:white;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px}
 .sold .img-container img{opacity:0.5}
-
 /* CHECKBOX */
 .cb-wrap{position:absolute;top:10px;left:10px;width:24px;height:24px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.7);border-radius:6px;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;backdrop-filter:blur(4px)}
 .card.selected .cb-wrap{background:#27ae60;border-color:#27ae60}
 .cb-check{display:none;color:white;font-size:14px;font-weight:700}
 .card.selected .cb-check{display:block}
-
 /* ZOOM BUTTON */
 .zoom-btn{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.4);color:white;border:none;border-radius:18px;padding:9px 11px;cursor:pointer;backdrop-filter:blur(4px);font-size:1rem;z-index:4;line-height:1;display:flex;align-items:center;justify-content:center}
 .zoom-btn:hover{background:rgba(0,0,0,0.65)}
-
 /* OVERLAY TITLE */
-.overlay-title{position:absolute;bottom:0;width:100%;background:rgba(255, 255, 255, 0.7);color:#000;padding:16px 12px;font-size:0.95rem;font-weight:600;text-align:right;direction:rtl;z-index:2;line-height:1.3}
+.overlay-title{position:absolute;bottom:0;width:100%;background:rgba(255,255,255,0.7);color:#000;padding:16px 12px;font-size:0.95rem;font-weight:600;text-align:right;direction:rtl;z-index:2;line-height:1.3}
 @media(max-width:767px){.overlay-title{font-size:0.82rem;padding:6px 8px}}
-
 /* CARD BOTTOM */
-.card-body{padding:16px 12px;background:#fff;display:flex;align-items:center;justify-content:space-between;direction:rtl;margin-top: auto; flex: 1;}
+.card-body{padding:16px 12px;background:#fff;display:flex;align-items:center;justify-content:space-between;direction:rtl;margin-top:auto;flex:1}
 .card-info{display:flex;flex-direction:column;gap:3px;text-align:right;flex:1;min-width:0}
 .category-badge{display:inline-block;background:#eaf5f6;color:#654b44;padding:2px 8px;border-radius:5px;font-size:0.72rem;width:fit-content;margin-bottom:2px}
 .card-author{font-size:0.8rem;color:#654b44}
 .price-circle{background:#26666B;color:white;width:46px;height:46px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0;margin-right:8px;line-height:1;text-align:center}
-
 .badge-new{position:absolute;top:16px;right:58px;background:#e74c3c;color:white;font-size:10px;font-weight:700;padding:3px 7px;border-radius:20px;z-index:2}
-  
 /* EMPTY / LOADING */
 .empty{text-align:center;padding:3rem;color:#654B44;font-size:14px;grid-column:1/-1;opacity:.7}
 .loading{text-align:center;padding:3rem;color:#654B44;font-size:14px;grid-column:1/-1}
-
 /* FAB */
 .fab-wrap{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:100}
 .fab-wa{background:#25D366;color:white;border:none;border-radius:30px;padding:13px 26px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;font-family:'Heebo',sans-serif}
@@ -78,7 +64,6 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .fab-order.visible{display:block}
 .fab-badge{background:white;color:#16a34a;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:4px}
 .pb-bottom{height:90px}
-
 /* ORDER MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.open{display:flex}
@@ -94,7 +79,6 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .modal-total{font-size:15px;font-weight:700;color:#145960;margin-bottom:16px}
 .btn-send-wa{background:linear-gradient(90deg,#25D366,#1da851);color:white;border:none;border-radius:10px;padding:13px;width:100%;font-size:15px;cursor:pointer;font-weight:700;margin-bottom:8px;font-family:'Heebo',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-cancel{background:#f5f5f5;color:#555;border:none;border-radius:10px;padding:10px;width:100%;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif}
-
 /* ZOOM MODAL */
 #zoomModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;padding:1rem}
 #zoomModal.open{display:flex}
@@ -103,6 +87,33 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .zoom-modal-title{padding:12px 16px;font-size:1rem;font-weight:700;color:#654B44;text-align:right;background:#fff;direction:rtl}
 .zoom-close{position:absolute;top:10px;left:10px;color:#654B44;font-size:1.5rem;cursor:pointer;background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10}
 @media(max-width:767px){.zoom-modal-inner{max-width:calc(100vw - 32px)}}
+
+/* === RECOMMENDATION DISPLAY === */
+/* Badge on card image */
+.rec-badge-alumni{position:absolute;bottom:52px;right:0;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-size:9px;font-weight:700;padding:3px 8px;border-radius:12px 0 0 12px;z-index:3;box-shadow:0 2px 8px rgba(245,158,11,0.4)}
+/* Recommendation strip below card-body */
+.rec-strip{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-top:2px solid #fcd34d;padding:10px 12px;direction:rtl}
+.rec-strip-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rec-strip-star{font-size:1rem}
+.rec-strip-title{font-size:.75rem;font-weight:900;color:#92400e}
+.rec-strip-kid{font-size:.72rem;color:#a16207;font-weight:600}
+.rec-strip-q1{font-size:.78rem;color:#78350f;line-height:1.5;font-style:italic;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.rec-strip-img{width:100%;border-radius:8px;margin-top:6px;max-height:120px;object-fit:cover}
+
+/* Recommendation detail modal */
+#recModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:1rem}
+#recModal.open{display:flex}
+.rec-modal-inner{background:white;border-radius:20px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.rec-modal-header{background:linear-gradient(135deg,#26666b,#145960);padding:20px;border-radius:20px 20px 0 0;color:white;text-align:center}
+.rec-modal-book-img{width:80px;height:100px;object-fit:cover;border-radius:10px;margin:0 auto 10px;display:block;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.rec-modal-book-title{font-size:1rem;font-weight:900}
+.rec-modal-body{padding:20px}
+.rec-alumni-badge{background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-block;margin-bottom:14px}
+.rec-modal-kid{font-size:.85rem;color:#888;margin-bottom:14px}
+.rec-modal-q-label{font-size:.72rem;font-weight:700;color:#92400e;text-transform:uppercase;margin-bottom:3px}
+.rec-modal-q-text{font-size:.9rem;color:#444;line-height:1.6;margin-bottom:14px;font-style:italic}
+.rec-modal-photo{width:100%;border-radius:12px;margin:10px 0}
+.rec-modal-close{background:#f5f5f5;color:#555;border:none;border-radius:10px;padding:11px;width:100%;font-size:14px;cursor:pointer;font-family:'Heebo',sans-serif}
 </style>
 </head>
 <body>
@@ -113,7 +124,7 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 </div>
 
 <div class="project-info">
-כל קנייה היא תרומה למסיבת הסיום של שכבת ו'. תודה על התמיכה!
+  כל קנייה היא תרומה למסיבת הסיום של שכבת ו'. תודה על התמיכה!
 </div>
 
 <div class="controls">
@@ -121,7 +132,6 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 </div>
 
 <div class="grid" id="grid"><p class="loading">⏳ טוענת ספרים...</p></div>
-
 <div class="pb-bottom"></div>
 
 <div class="fab-wrap">
@@ -158,6 +168,26 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
   </div>
 </div>
 
+<!-- RECOMMENDATION MODAL -->
+<div id="recModal" onclick="closeRecModal()">
+  <div class="rec-modal-inner" onclick="event.stopPropagation()">
+    <div class="rec-modal-header">
+      <img class="rec-modal-book-img" id="recModalBookImg" src="" alt="">
+      <div class="rec-modal-book-title" id="recModalBookTitle"></div>
+    </div>
+    <div class="rec-modal-body">
+      <div class="rec-alumni-badge">⭐ ממליצים בוגרי ויצמן</div>
+      <div class="rec-modal-kid" id="recModalKid"></div>
+      <div class="rec-modal-q-label" id="recModalQ1Label"></div>
+      <div class="rec-modal-q-text" id="recModalQ1"></div>
+      <div class="rec-modal-q-label" id="recModalQ2Label"></div>
+      <div class="rec-modal-q-text" id="recModalQ2"></div>
+      <img class="rec-modal-photo" id="recModalPhoto" src="" alt="" style="display:none">
+      <button class="rec-modal-close" onclick="closeRecModal()">סגור</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -173,13 +203,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const booksCol = collection(db, 'books');
+const recsCol  = collection(db, 'recommendations');
 
 const ALL_CATS = ["הכל","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרים עבור מבוגרים","משחקים","חוברות לימוד","ספריית פיג'מה"];
 const PHONE = "972544923904";
 
 let books = [];
+let approvedRecs = {};  // bookId -> rec (status=approved only)
 let activeFilter = "הכל";
 let selectedIds = new Set();
+
+const Q_ALL = { q1:'למה את/ה ממליץ/ה על הספר?',    q2:'מה הכי אהבת בו?' };
+const Q_PAJ = { q1:'מה הספר מלמד ולמה הוא כייפי?', q2:'למה כדאי להורים לקנות את הספר?' };
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
 function matchFilter(b){ return activeFilter === "הכל" || getCats(b).includes(activeFilter); }
@@ -202,24 +237,50 @@ function cardHtml(b){
   const firstCat = cats.map(c => `<span class="category-badge">${c}</span>`).join('');
   const selected = selectedIds.has(String(b.id));
   const isNew = b.createdAt?.toMillis?.() > Date.now() - 3*24*60*60*1000;
+  const rec = approvedRecs[String(b.id)];
+
+  // Recommendation strip
+  let recStrip = '';
+  let recAlumniBadge = '';
+  if (rec) {
+    recAlumniBadge = `<div class="rec-badge-alumni">⭐ בוגרי ויצמן ממליצים</div>`;
+    const q1Short = (rec.q1_answer||'').substring(0,120);
+    const kidLine = rec.kid_name ? (rec.kid_name + (rec.class_number ? ', כיתה ' + rec.class_number : '')) : '';
+    const photoThumb = rec.image_url ? `<img class="rec-strip-img" src="${rec.image_url}" alt="">` : '';
+    recStrip = `
+<div class="rec-strip" onclick="event.stopPropagation();openRecModal('${b.id}')">
+  <div class="rec-strip-header">
+    <span class="rec-strip-star">⭐</span>
+    <div>
+      <div class="rec-strip-title">ממליצים בוגרי ויצמן</div>
+      ${kidLine ? `<div class="rec-strip-kid">${kidLine}</div>` : ''}
+    </div>
+  </div>
+  <div class="rec-strip-q1">${q1Short}${(rec.q1_answer||'').length > 120 ? '...' : ''}</div>
+  ${photoThumb}
+</div>`;
+  }
+
   return `
-    <div class="card ${b.sold?'sold':''} ${selected?'selected':''}" onclick="toggleSelect('${b.id}')" data-id="${b.id}">
-      <div class="img-container">
-        <img src="${b.img||''}" alt="${b.title}" loading="lazy">
-        <div class="sold-overlay"><span class="sold-label">נמכר</span></div>
-        <div class="cb-wrap"><span class="cb-check">✓</span></div>
-        <button class="zoom-btn" onclick="event.stopPropagation();openZoomModal('${b.id}')" title="הגדל תמונה">⤢</button>
-        ${isNew ? '<span class="badge-new">✨ חדש</span>' : ''}
-        <div class="overlay-title">${b.title||'ספר'}</div>
-      </div>
-      <div class="card-body">
-        <div class="card-info">
-         <div style="display:flex;flex-wrap:wrap;gap:3px">${firstCat}</div>
-          <span class="card-author">${b.author || ''}</span>
-        </div>
-        <div class="price-circle">${b.price}<br>&#8362;</div>
-      </div>
-    </div>`;
+<div class="card ${b.sold?'sold':''} ${selected?'selected':''}" onclick="toggleSelect('${b.id}')" data-id="${b.id}">
+  <div class="img-container">
+    <img src="${b.img||''}" alt="${b.title}" loading="lazy">
+    <div class="sold-overlay"><span class="sold-label">נמכר</span></div>
+    <div class="cb-wrap"><span class="cb-check">✓</span></div>
+    <button class="zoom-btn" onclick="event.stopPropagation();openZoomModal('${b.id}')" title="הגדל תמונה">⤢</button>
+    ${isNew ? '<span class="badge-new">✨ חדש</span>' : ''}
+    ${recAlumniBadge}
+    <div class="overlay-title">${b.title||'ספר'}</div>
+  </div>
+  <div class="card-body">
+    <div class="card-info">
+      <div style="display:flex;flex-wrap:wrap;gap:3px">${firstCat}</div>
+      <span class="card-author">${b.author || ''}</span>
+    </div>
+    <div class="price-circle">${b.price}<br>&#8362;</div>
+  </div>
+  ${recStrip}
+</div>`;
 }
 
 function toggleSelect(id){
@@ -237,7 +298,7 @@ function updateFab(){
   const badge = document.getElementById('fabBadge');
   const fabWaText = document.getElementById('fabWaText');
   badge.textContent = n;
-  if(n > 0) {
+  if(n > 0){
     fabOrder.classList.add('visible');
     fabWaText.textContent = n + ' ספרים נבחרו — שלחי הזמנה';
   } else {
@@ -247,9 +308,8 @@ function updateFab(){
 }
 
 function handleWaBtn(){
-  if(selectedIds.size > 0){
-    openOrderModal();
-  } else {
+  if(selectedIds.size > 0){ openOrderModal(); }
+  else {
     var msg = encodeURIComponent('אני מעוניינת לרכוש ספר מהיריד. האם תוכלי לעזור לי?');
     window.open('https://wa.me/' + PHONE + '?text=' + msg, '_blank');
   }
@@ -284,11 +344,7 @@ function sendOrderWa(){
   const selected = books.filter(b => selectedIds.has(String(b.id)));
   const total = selected.reduce((s,b) => s+b.price, 0);
   const parts = selected.map(b => '- ' + b.title + ' (₪' + b.price + ')').join('\n');
-  const msg = encodeURIComponent(
-    'אני מעוניין לרכוש את הספרים האלו:\n' + parts +
-    '\nסה"כ: ₪' + total +
-    '\nאנא שלח לי קישור לפייבוקס'
-  );
+  const msg = encodeURIComponent('אני מעוניין לרכוש את הספרים האלו:\n' + parts + '\nסה"כ: ₪' + total + '\nאנא שלח לי קישור לפייבוקס');
   window.open('https://wa.me/' + PHONE + '?text=' + msg, '_blank');
   closeOrderModal();
 }
@@ -302,6 +358,35 @@ function openZoomModal(id){
 }
 
 function closeZoomModal(){ document.getElementById('zoomModal').classList.remove('open'); }
+
+function openRecModal(bookId){
+  const b = books.find(x => String(x.id) === String(bookId));
+  const rec = approvedRecs[String(bookId)];
+  if (!b || !rec) return;
+
+  document.getElementById('recModalBookImg').src = b.img || '';
+  document.getElementById('recModalBookTitle').textContent = b.title || '';
+
+  const kidLine = rec.kid_name ? rec.kid_name + (rec.class_number ? ', כיתה ' + rec.class_number : '') : '';
+  document.getElementById('recModalKid').textContent = kidLine ? '— ' + kidLine : '';
+
+  const qs = rec.category === 'toddler' ? Q_PAJ : Q_ALL;
+  document.getElementById('recModalQ1Label').textContent = qs.q1;
+  document.getElementById('recModalQ1').textContent = rec.q1_answer || '';
+  document.getElementById('recModalQ2Label').textContent = qs.q2;
+  document.getElementById('recModalQ2').textContent = rec.q2_answer || '';
+
+  const photo = document.getElementById('recModalPhoto');
+  if (rec.image_url) {
+    photo.src = rec.image_url;
+    photo.style.display = 'block';
+  } else {
+    photo.style.display = 'none';
+  }
+  document.getElementById('recModal').classList.add('open');
+}
+
+function closeRecModal(){ document.getElementById('recModal').classList.remove('open'); }
 
 function render(){
   const f = books.filter(b => matchFilter(b));
@@ -317,6 +402,18 @@ onSnapshot(booksCol, (snap) => {
   updateFab();
 });
 
+// Only show approved recommendations
+onSnapshot(recsCol, (snap) => {
+  approvedRecs = {};
+  snap.docs.forEach(d => {
+    const rec = {...d.data(), _id: d.id};
+    if (rec.status === 'approved') {
+      approvedRecs[String(rec.book_id)] = rec;
+    }
+  });
+  render();
+});
+
 window.toggleSelect = toggleSelect;
 window.setFilter = setFilter;
 window.openOrderModal = openOrderModal;
@@ -326,5 +423,8 @@ window.sendOrderWa = sendOrderWa;
 window.openZoomModal = openZoomModal;
 window.closeZoomModal = closeZoomModal;
 window.handleWaBtn = handleWaBtn;
+window.openRecModal = openRecModal;
+window.closeRecModal = closeRecModal;
 </script>
-</body></html>
+</body>
+</html>
