@@ -86,6 +86,11 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 .login-btn{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:12px;width:100%;font-size:15px;cursor:pointer;font-weight:bold}
 .err{color:#ef4444;font-size:13px;margin-top:8px}
 .processing{font-size:13px;color:#7c2fa0;text-align:center;padding:8px;display:none}
+.sort-toggle{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:bold;margin-right:8px}
+.sort-toggle.active{background:linear-gradient(90deg,#16a34a,#15803d)}
+.grid.drag-mode .card{cursor:grab}
+.grid.drag-mode .card.dragging{opacity:0.7;cursor:grabbing}
+.badge-new{position:absolute;top:8px;right:8px;background:#e74c3c;color:white;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;z-index:5}
 
 /* === RECOMMENDATION STYLES === */
 /* Pending badge on card */
@@ -146,6 +151,7 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
   <div class="controls">
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <input class="search" type="text" id="search" placeholder="🔍 חיפוש..." oninput="render()" style="margin-bottom:0;flex:1">
+      <button class="sort-toggle" id="sortToggle" onclick="toggleSortMode()">🔄 סידור ידני</button>
       <button onclick="render()" style="padding:8px 14px;border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;background:rgba(255,255,255,0.25);color:white;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:bold">חיפוש</button>
     </div>
     <div class="filters" id="filters"></div>
@@ -365,6 +371,8 @@ let books = [];
 let recs  = {};  // bookId -> array of rec objects
 let activeFilter = "הכל";
 let selectedIds = new Set();
+let sortModeActive = false;
+let draggedBookId = null;
 
 // gen link modal state
 let genLinkBookId = null;
@@ -378,6 +386,68 @@ let modBookIdCurrent = null;
 let modRecIndex = 0;
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
+
+function toggleSortMode(){
+  sortModeActive = !sortModeActive;
+  const btn = document.getElementById('sortToggle');
+  const grid = document.getElementById('grid');
+  if(sortModeActive){
+    btn.classList.add('active');
+    btn.textContent = '💾 שמור סדר';
+    grid.classList.add('drag-mode');
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = '🔄 סידור ידני';
+    grid.classList.remove('drag-mode');
+  }
+  render();
+}
+
+function handleDragStart(e, bookId){
+  if(!sortModeActive) return;
+  draggedBookId = bookId;
+  e.dataTransfer.effectAllowed = 'move';
+  document.querySelector(`[data-book-id="${bookId}"]`).classList.add('dragging');
+}
+
+function handleDragEnd(e, bookId){
+  document.querySelector(`[data-book-id="${bookId}"]`)?.classList.remove('dragging');
+  draggedBookId = null;
+}
+
+function handleDragOver(e){
+  if(!sortModeActive) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDrop(e, targetBookId){
+  if(!sortModeActive || !draggedBookId || draggedBookId === targetBookId) return;
+  e.preventDefault();
+
+  const draggedIdx = books.findIndex(b => String(b.id) === draggedBookId);
+  const targetIdx = books.findIndex(b => String(b.id) === targetBookId);
+  if(draggedIdx === -1 || targetIdx === -1) return;
+
+  const [removed] = books.splice(draggedIdx, 1);
+  books.splice(targetIdx, 0, removed);
+
+  books.forEach((b, i) => { b.order = i; });
+  saveSort();
+  render();
+}
+
+async function saveSort(){
+  const promises = books.map((b, i) =>
+    updateDoc(doc(db, 'books', b.id), { order: i })
+  );
+  try {
+    await Promise.all(promises);
+  } catch(e) {
+    alert('שגיאה בשמירת הסדר: ' + e.message);
+  }
+}
+
 function matchFilter(b){
   if (activeFilter === SOLD_CAT) return b.sold;
   if (b.sold) return false;
@@ -414,6 +484,8 @@ function cardHtml(b){
   const pendingRecs = recList.filter(r => r.status === 'pending');
   const approvedRecs = recList.filter(r => r.status === 'approved');
   const totalRecs = recList.length;
+  const isNew = b.createdAt?.toMillis?.() > Date.now() - 3*24*60*60*1000;
+  const dragAttrs = sortModeActive ? `draggable="true" ondragstart="handleDragStart(event,'${b.id}')" ondragend="handleDragEnd(event,'${b.id}')" ondragover="handleDragOver(event)" ondrop="handleDrop(event,'${b.id}')"` : '';
 
   // badge on image
   let recBadge = '';
@@ -428,10 +500,11 @@ function cardHtml(b){
   }
 
   return `
-<div class="card ${b.sold?'sold':''} ${selected?'selected':''}" onclick="toggleSelect('${b.id}')">
+<div class="card ${b.sold?'sold':''} ${selected?'selected':''}" data-book-id="${b.id}" ${dragAttrs} onclick="toggleSelect('${b.id}')" style="${sortModeActive ? 'user-select:none;' : ''}"">
   <div class="card-img-wrap">
     <img src="${b.img||''}" alt="${b.title}" loading="lazy">
     <div class="sold-overlay"><span class="sold-label">נמכר</span></div>
+    ${isNew && !b.sold ? '<span class="badge-new">✨ חדש</span>' : ''}
     ${recBadge}
   </div>
   <div class="card-body">
@@ -865,7 +938,7 @@ window.addOneBook = async function(){
   if (!title) { alert('נא למלא שם ספר'); return; }
   try {
     const maxOrder = books.reduce((m,b) => Math.max(m, b.order||0), 0);
-    await addDoc(booksCol, { title, author, price, cat: cats.length ? cats : ['ספרי ילדים'], img: newBookImg||'', sold:false, order: maxOrder+1 });
+    await addDoc(booksCol, { title, author, price, cat: cats.length ? cats : ['ספרי ילדים'], img: newBookImg||'', sold:false, order: maxOrder+1, createdAt: serverTimestamp() });
     window.closePanel();
     newBookImg = '';
     document.getElementById('thumbGrid').innerHTML = '';
@@ -881,6 +954,11 @@ window.setFilter = setFilter;
 window.setFilterByIndex = setFilterByIndex;
 window.toggleSelect = toggleSelect;
 window.render = render;
+window.toggleSortMode = toggleSortMode;
+window.handleDragStart = handleDragStart;
+window.handleDragEnd = handleDragEnd;
+window.handleDragOver = handleDragOver;
+window.handleDrop = handleDrop;
 
 /* PASSWORD */
 window.checkPass = function(){
