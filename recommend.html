@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 17:05 -->
+<!-- built: 10:15 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>המלצת ספר — יריד ויצמן</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -52,7 +52,21 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
 .success-title{font-size:1.5rem;font-weight:900;color:#654B44;margin-bottom:8px}
 .success-msg{font-size:.95rem;color:#888;line-height:1.6}
 
-/* ERROR */
+/* STAR RATING */
+.stars-wrap{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:6px;margin-top:8px}
+.stars-wrap input{display:none}
+.stars-wrap label{font-size:2rem;cursor:pointer;color:#d1d5db;transition:color .15s;line-height:1}
+.stars-wrap input:checked ~ label,
+.stars-wrap label:hover,
+.stars-wrap label:hover ~ label{color:#f59e0b}
+.stars-wrap:hover label{color:#f59e0b}
+.stars-wrap label:hover ~ label{color:#f59e0b}
+/* override — only up to hovered */
+.stars-wrap{direction:rtl}
+/* AGE CHIPS */
+.chips-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{padding:7px 14px;border:2px solid #e0d5c0;border-radius:20px;font-size:.82rem;font-family:'Heebo',sans-serif;cursor:pointer;background:white;color:#555;transition:.15s;font-weight:500}
+.chip.selected{background:#26666b;color:white;border-color:#26666b;font-weight:700}
 .err-msg{color:#e74c3c;font-size:.8rem;margin-top:4px;display:none}
 
 /* LOADING */
@@ -99,6 +113,27 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
 
     <label class="form-label">כיתה <span>*</span></label>
     <input type="text" id="classInput" placeholder="לדוגמה: ו׳1">
+
+    <label class="form-label">⭐ כמה כוכבים תיתן לספר הזה? <span>*</span></label>
+    <div class="stars-wrap" id="starsWrap">
+      <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
+      <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
+      <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
+      <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
+      <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
+    </div>
+    <div class="err-msg" id="ratingErr">נא לבחור דירוג</div>
+
+    <label class="form-label" style="margin-top:18px">🎯 לאיזה גיל הספר מתאים? <span>*</span></label>
+    <div class="chips-wrap" id="ageChips">
+      <div class="chip" onclick="selectAge(this)" data-val="פעוטות (גילאי 0-3)">פעוטות (גילאי 0-3)</div>
+      <div class="chip" onclick="selectAge(this)" data-val="גן וטרום קריאה (גילאי 3-6)">גן וטרום קריאה (גילאי 3-6)</div>
+      <div class="chip" onclick="selectAge(this)" data-val="ראשית קריאה (גילאי 6-9)">ראשית קריאה (גילאי 6-9)</div>
+      <div class="chip" onclick="selectAge(this)" data-val="גילאי יסודי (גילאי 9-12)">גילאי יסודי (גילאי 9-12)</div>
+      <div class="chip" onclick="selectAge(this)" data-val="נוער (גילאי 12-15)">נוער (גילאי 12-15)</div>
+      <div class="chip" onclick="selectAge(this)" data-val="נוער בוגר (גילאי 15 ומעלה)">נוער בוגר (גילאי 15 ומעלה)</div>
+    </div>
+    <div class="err-msg" id="ageErr">נא לבחור קבוצת גיל</div>
 
     <label class="form-label" id="q1Label">שאלה 1 <span>*</span></label>
     <textarea id="q1" placeholder="..." rows="3"></textarea>
@@ -151,6 +186,13 @@ const category = params.get('category')  || 'all';
 
 let bookData = null;
 let imgBase64 = null;
+let selectedAge = null;
+
+window.selectAge = function(el) {
+  document.querySelectorAll('#ageChips .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAge = el.dataset.val;
+};
 
 /* --- QUESTION SETS --- */
 const Q_ALL = {
@@ -262,12 +304,18 @@ window.submitRec = async function() {
   const classVal    = document.getElementById('classInput').value.trim();
   const q1Val       = document.getElementById('q1').value.trim();
   const q2Val       = document.getElementById('q2').value.trim();
+  const ratingEl    = document.querySelector('input[name="rating"]:checked');
+  const ratingVal   = ratingEl ? Number(ratingEl.value) : null;
 
   let valid = true;
   if (!q1Val) { document.getElementById('q1Err').style.display='block'; valid=false; }
   else document.getElementById('q1Err').style.display='none';
   if (!q2Val) { document.getElementById('q2Err').style.display='block'; valid=false; }
   else document.getElementById('q2Err').style.display='none';
+  if (!ratingVal) { document.getElementById('ratingErr').style.display='block'; valid=false; }
+  else document.getElementById('ratingErr').style.display='none';
+  if (!selectedAge) { document.getElementById('ageErr').style.display='block'; valid=false; }
+  else document.getElementById('ageErr').style.display='none';
   if (!kidNameVal) { alert('נא למלא שם'); return; }
   if (!valid) return;
 
@@ -284,6 +332,8 @@ window.submitRec = async function() {
       kid_name:   kidNameVal,
       class_number: classVal,
       category:   cat,
+      rating:     ratingVal,
+      age_group:  selectedAge,
       q1_answer:  q1Val,
       q2_answer:  q2Val,
       image_url:  imgBase64 || null,

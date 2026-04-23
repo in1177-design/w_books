@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 17:30 -->
+<!-- built: 10:15 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>⚙️ ניהול ספרים</title>
 <style>
@@ -91,10 +91,13 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 /* Pending badge on card */
 .rec-pending-badge{position:absolute;top:8px;right:8px;z-index:6;background:#f59e0b;color:white;font-size:10px;font-weight:bold;padding:4px 8px;border-radius:20px;cursor:pointer;box-shadow:0 2px 8px rgba(245,158,11,0.5);animation:pulse-badge 2s infinite}
 @keyframes pulse-badge{0%,100%{box-shadow:0 2px 8px rgba(245,158,11,0.5)}50%{box-shadow:0 2px 16px rgba(245,158,11,0.8)}}
+/* Pending link badge (no rec yet) */
+.rec-link-pending-badge{position:absolute;top:8px;right:8px;z-index:6;background:#8b5cf6;color:white;font-size:10px;font-weight:bold;padding:4px 8px;border-radius:20px;cursor:pointer;box-shadow:0 2px 8px rgba(139,92,246,0.45)}
+.rec-link-pending-badge:hover{background:#7c3aed}
+
+
 /* Approved badge */
 .rec-approved-badge{position:absolute;top:8px;right:8px;z-index:6;background:#10b981;color:white;font-size:10px;font-weight:bold;padding:4px 8px;border-radius:20px}
-
-/* Link button on card */
 .rec-link-btn{padding:5px 0;border:none;border-radius:7px;font-size:11px;cursor:pointer;background:#e0f2fe;color:#0369a1;font-weight:bold;flex:1}
 .rec-link-btn:hover{background:#bae6fd}
 
@@ -292,6 +295,8 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
       <div>
         <div class="mod-book-title" id="modBookTitle"></div>
         <div class="mod-kid-name" id="modKidHeader"></div>
+        <div id="modStars" style="color:#f59e0b;font-size:1rem;margin-top:3px"></div>
+        <div id="modAgeBadge" style="display:none;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:20px;font-size:10px;font-weight:bold;padding:2px 8px;margin-top:4px;display:inline-block"></div>
       </div>
     </div>
 
@@ -344,7 +349,8 @@ const recsCol  = collection(db, 'recommendations');
 
 const CATS = ["ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרי קריאה","משחקים","חוברות לימוד","PJ ספריית","ספרים עבור מבוגרים"];
 const SOLD_CAT = "כבר נמכר";
-const ALL_CATS = ["הכל",...CATS, SOLD_CAT];
+const REC_CAT  = "⭐ מומלצים";
+const ALL_CATS = ["הכל", REC_CAT, ...CATS, SOLD_CAT];
 const PHONE = "972544934904";
 const RECOMMEND_BASE = 'https://in1177-design.github.io/w_books/recommend.html';
 
@@ -368,6 +374,10 @@ function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
 function matchFilter(b){
   if (activeFilter === SOLD_CAT) return b.sold;
   if (b.sold) return false;
+  if (activeFilter === REC_CAT) {
+    const recList = recs[String(b.id)] || [];
+    return recList.some(r => r.status === 'approved');
+  }
   if (activeFilter === "הכל") return true;
   return getCats(b).includes(activeFilter);
 }
@@ -406,6 +416,8 @@ function cardHtml(b){
   } else if (approvedRecs.length > 0) {
     const countLabel = approvedRecs.length > 1 ? approvedRecs.length + ' מאושרות' : 'מאושרת';
     recBadge = `<div class="rec-approved-badge" onclick="event.stopPropagation();openModModal('${b.id}')" title="המלצות מאושרות">✅ ${countLabel}</div>`;
+  } else if (b.link_generated) {
+    recBadge = `<div class="rec-link-pending-badge" onclick="event.stopPropagation();openGenLink('${b.id}')" title="ממתין להמלצה">⏳ ממתין להמלצה</div>`;
   }
 
   return `
@@ -489,7 +501,7 @@ window.setGenCat = function(cat, el) {
   el.classList.add('active');
 };
 
-window.generateLink = function() {
+window.generateLink = async function() {
   const kidName = document.getElementById('genKidName').value.trim();
   if (!kidName) { alert('נא למלא שם ילד/ה'); return; }
   const params = new URLSearchParams({
@@ -501,6 +513,14 @@ window.generateLink = function() {
   document.getElementById('genLinkResult').textContent = genLinkUrl;
   document.getElementById('genLinkResult').style.display = 'block';
   document.getElementById('genCopyBtn').style.display = 'block';
+  // Mark book as having a pending link (if no approved rec yet)
+  try {
+    const recList = recs[String(genLinkBookId)] || [];
+    const hasApproved = recList.some(r => r.status === 'approved');
+    if (!hasApproved) {
+      await updateDoc(doc(db, 'books', genLinkBookId), { link_generated: true });
+    }
+  } catch(e) { /* silently ignore */ }
 };
 
 window.copyLink = function() {
@@ -551,6 +571,13 @@ function loadModRec(bookId, index) {
   document.getElementById('modClass').value = rec.class_number || '';
   document.getElementById('modQ1').value = rec.q1_answer || '';
   document.getElementById('modQ2').value = rec.q2_answer || '';
+
+  // Stars & Age
+  const starsEl = document.getElementById('modStars');
+  const ageEl   = document.getElementById('modAgeBadge');
+  starsEl.textContent = rec.rating ? ('★'.repeat(rec.rating) + '☆'.repeat(5 - rec.rating)) : '';
+  if (rec.age_group) { ageEl.textContent = rec.age_group; ageEl.style.display = 'inline-block'; }
+  else ageEl.style.display = 'none';
 
   const qs = rec.category === 'toddler' ? Q_PAJ : Q_ALL;
   document.getElementById('modQ1Label').textContent = qs.q1;
@@ -636,6 +663,8 @@ window.modPublish = async function() {
       q2_answer: document.getElementById('modQ2').value.trim(),
       image_url: modPhotoVal || null
     });
+    // Remove pending-link indicator from book
+    try { await updateDoc(doc(db, 'books', modBookIdCurrent), { link_generated: false }); } catch(e) {}
     closeModModal();
     alert('✅ ההמלצה פורסמה!');
   } catch(e) {
