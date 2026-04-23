@@ -88,9 +88,13 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 .processing{font-size:13px;color:#7c2fa0;text-align:center;padding:8px;display:none}
 .sort-toggle{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:bold;margin-right:8px;transition:.2s}
 .sort-toggle.active{background:linear-gradient(90deg,#16a34a,#15803d)}
-.grid.drag-mode .card{cursor:grab;border:2px solid transparent;transition:all .15s}
-.grid.drag-mode .card:hover{border-color:#7c2fa0;box-shadow:0 6px 20px rgba(124,47,160,0.3);transform:translateY(-2px)}
-.grid.drag-mode .card.dragging{opacity:0.6;cursor:grabbing;border-color:#16a34a}
+.grid.drag-mode .card{border:2px solid transparent;transition:all .15s}
+.grid.drag-mode .card:hover{border-color:#7c2fa0;box-shadow:0 6px 20px rgba(124,47,160,0.3)}
+.grid.drag-mode .card.dragging{opacity:0.5;border-color:#16a34a}
+.drag-handle{display:none;position:absolute;top:8px;left:8px;z-index:10;background:rgba(0,0,0,0.55);color:white;border-radius:8px;padding:5px 6px;cursor:grab;font-size:14px;line-height:1;letter-spacing:1px;user-select:none;backdrop-filter:blur(4px)}
+.drag-handle:hover{background:rgba(0,0,0,0.8)}
+.drag-handle:active{cursor:grabbing}
+.grid.drag-mode .drag-handle{display:block}
 .badge-new{position:absolute;top:8px;right:8px;background:#e74c3c;color:white;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;z-index:5}
 
 /* === RECOMMENDATION STYLES === */
@@ -486,7 +490,7 @@ function cardHtml(b){
   const approvedRecs = recList.filter(r => r.status === 'approved');
   const totalRecs = recList.length;
   const isNew = b.createdAt?.toMillis?.() > Date.now() - 3*24*60*60*1000;
-  const dragAttrs = sortModeActive ? `draggable="true" ondragstart="handleDragStart(event,'${b.id}')" ondragend="handleDragEnd(event,'${b.id}')" ondragover="handleDragOver(event)" ondrop="handleDrop(event,'${b.id}')"` : '';
+  const dropAttrs = sortModeActive ? `ondragover="handleDragOver(event)" ondrop="handleDrop(event,'${b.id}')"` : '';
 
   // badge on image
   let recBadge = '';
@@ -500,9 +504,12 @@ function cardHtml(b){
     recBadge = `<div class="rec-link-pending-badge" onclick="event.stopPropagation();openGenLink('${b.id}')" title="ממתין להמלצה">⏳ ממתין להמלצה</div>`;
   }
 
+  const dragHandle = sortModeActive ? `<div class="drag-handle" draggable="true" ondragstart="handleDragStart(event,'${b.id}')" ondragend="handleDragEnd(event,'${b.id}')">⠿⠿</div>` : '';
+
   return `
-<div class="card ${b.sold?'sold':''} ${selected?'selected':''}" data-book-id="${b.id}" ${dragAttrs} onclick="toggleSelect('${b.id}')" style="${sortModeActive ? 'user-select:none;' : ''}"">
+<div class="card ${b.sold?'sold':''} ${selected?'selected':''}" data-book-id="${b.id}" ${dropAttrs} onclick="${sortModeActive ? '' : `toggleSelect('${b.id}')`}">
   <div class="card-img-wrap">
+    ${dragHandle}
     <img src="${b.img||''}" alt="${b.title}" loading="lazy">
     <div class="sold-overlay"><span class="sold-label">נמכר</span></div>
     ${isNew && !b.sold ? '<span class="badge-new">✨ חדש</span>' : ''}
