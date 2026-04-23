@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 10:15 -->
+<!-- built: 11:20 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ספרים יד שניה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -134,8 +134,11 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 .rec-portrait{width:60px!important;height:60px!important;min-width:60px;min-height:60px;max-width:60px;max-height:60px;border-radius:50%;object-fit:cover;border:3px solid;flex-shrink:0;display:block}
 .rec-portrait:not(:last-child){margin-right:-20px}
 /* Star display in rec modal */
-.rec-stars{color:#f59e0b;font-size:1.1rem;letter-spacing:1px;margin-bottom:4px}
-.rec-age-badge{display:inline-block;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:20px;font-size:.72rem;font-weight:700;padding:3px 10px;margin-bottom:8px}
+.rec-stars-label{font-size:.75rem;font-weight:700;color:#654B44;margin-bottom:2px;margin-top:8px}
+.rec-stars{color:#f59e0b;font-size:1.2rem;letter-spacing:2px;margin-bottom:4px}
+.rec-age-label{font-size:.75rem;font-weight:700;color:#654B44;margin-bottom:4px;margin-top:4px}
+.rec-age-badge{display:inline-block;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:20px;font-size:.72rem;font-weight:700;padding:3px 10px;margin:2px 2px 6px}
+.rec-ages-wrap{display:flex;flex-wrap:wrap;gap:2px}
 /* Sold filter button style */
 .fb[data-sold]{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
 .fb[data-sold].active{background:#b91c1c;color:white;border-color:#b91c1c}
@@ -274,8 +277,10 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
             <div class="rec-modal-kid-class" id="recModalKidClass"></div>
           </div>
         </div>
+        <div class="rec-stars-label" id="recModalStarsLabel" style="display:none"></div>
         <div class="rec-stars" id="recModalStars" style="display:none"></div>
-        <div class="rec-age-badge" id="recModalAge" style="display:none"></div>
+        <div class="rec-age-label" id="recModalAgeLabel" style="display:none"></div>
+        <div class="rec-ages-wrap" id="recModalAge" style="display:none"></div>
         <div class="rec-modal-q-label" id="recModalQ1Label"></div>
         <div class="rec-modal-q-text"  id="recModalQ1"></div>
         <div class="rec-modal-q-label" id="recModalQ2Label"></div>
@@ -513,17 +518,28 @@ function loadRecModal(bookId, idx) {
 
   // Stars & Age
   const starsEl = document.getElementById('recModalStars');
+  const starsLabelEl = document.getElementById('recModalStarsLabel');
   const ageEl   = document.getElementById('recModalAge');
+  const ageLabelEl = document.getElementById('recModalAgeLabel');
+
   if (rec.rating) {
+    starsLabelEl.textContent = 'הדירוג של ' + (rec.kid_name || 'הממליצ/ה') + ':';
     starsEl.textContent = '★'.repeat(rec.rating) + '☆'.repeat(5 - rec.rating);
+    starsLabelEl.style.display = 'block';
     starsEl.style.display = 'block';
   } else {
+    starsLabelEl.style.display = 'none';
     starsEl.style.display = 'none';
   }
-  if (rec.age_group) {
-    ageEl.textContent = rec.age_group;
-    ageEl.style.display = 'inline-block';
+
+  const ageGroups = Array.isArray(rec.age_group) ? rec.age_group : (rec.age_group ? [rec.age_group] : []);
+  if (ageGroups.length) {
+    ageLabelEl.textContent = 'אני חושב/ת שזה מתאים לגיל:';
+    ageEl.innerHTML = ageGroups.map(a => `<span class="rec-age-badge">${a}</span>`).join('');
+    ageLabelEl.style.display = 'block';
+    ageEl.style.display = 'block';
   } else {
+    ageLabelEl.style.display = 'none';
     ageEl.style.display = 'none';
   }
 

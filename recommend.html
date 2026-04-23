@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 10:15 -->
+<!-- built: 11:20 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>המלצת ספר — יריד ויצמן</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -53,20 +53,14 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
 .success-msg{font-size:.95rem;color:#888;line-height:1.6}
 
 /* STAR RATING */
-.stars-wrap{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:6px;margin-top:8px}
-.stars-wrap input{display:none}
-.stars-wrap label{font-size:2rem;cursor:pointer;color:#d1d5db;transition:color .15s;line-height:1}
-.stars-wrap input:checked ~ label,
-.stars-wrap label:hover,
-.stars-wrap label:hover ~ label{color:#f59e0b}
-.stars-wrap:hover label{color:#f59e0b}
-.stars-wrap label:hover ~ label{color:#f59e0b}
-/* override — only up to hovered */
-.stars-wrap{direction:rtl}
+.stars-row{display:flex;flex-direction:row;gap:4px;margin-top:8px}
+.star-btn{font-size:2.2rem;cursor:pointer;color:#d1d5db;background:none;border:none;padding:2px 4px;line-height:1;transition:color .1s}
+.star-btn.lit{color:#f59e0b}
 /* AGE CHIPS */
 .chips-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .chip{padding:7px 14px;border:2px solid #e0d5c0;border-radius:20px;font-size:.82rem;font-family:'Heebo',sans-serif;cursor:pointer;background:white;color:#555;transition:.15s;font-weight:500}
 .chip.selected{background:#26666b;color:white;border-color:#26666b;font-weight:700}
+.chips-hint{font-size:.75rem;color:#999;margin-top:5px}
 .err-msg{color:#e74c3c;font-size:.8rem;margin-top:4px;display:none}
 
 /* LOADING */
@@ -115,12 +109,12 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
     <input type="text" id="classInput" placeholder="לדוגמה: ו׳1">
 
     <label class="form-label">⭐ כמה כוכבים תיתן לספר הזה? <span>*</span></label>
-    <div class="stars-wrap" id="starsWrap">
-      <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
-      <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
-      <input type="radio" name="rating" id="s3" value="3"><label for="s3">★</label>
-      <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
-      <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
+    <div class="stars-row" id="starsRow">
+      <button type="button" class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+      <button type="button" class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+      <button type="button" class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+      <button type="button" class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+      <button type="button" class="star-btn" data-val="5" onclick="setRating(5)">★</button>
     </div>
     <div class="err-msg" id="ratingErr">נא לבחור דירוג</div>
 
@@ -133,7 +127,8 @@ input[type=text]:focus{outline:none;border-color:#26666b;box-shadow:0 0 0 3px rg
       <div class="chip" onclick="selectAge(this)" data-val="נוער (גילאי 12-15)">נוער (גילאי 12-15)</div>
       <div class="chip" onclick="selectAge(this)" data-val="נוער בוגר (גילאי 15 ומעלה)">נוער בוגר (גילאי 15 ומעלה)</div>
     </div>
-    <div class="err-msg" id="ageErr">נא לבחור קבוצת גיל</div>
+    <div class="chips-hint">ניתן לבחור עד 2 טווחי גיל</div>
+    <div class="err-msg" id="ageErr">נא לבחור לפחות טווח גיל אחד</div>
 
     <label class="form-label" id="q1Label">שאלה 1 <span>*</span></label>
     <textarea id="q1" placeholder="..." rows="3"></textarea>
@@ -186,12 +181,35 @@ const category = params.get('category')  || 'all';
 
 let bookData = null;
 let imgBase64 = null;
-let selectedAge = null;
+let selectedRating = 0;
+let selectedAges = [];
+
+window.setRating = function(val) {
+  selectedRating = val;
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.toggle('lit', Number(btn.dataset.val) <= val);
+  });
+  document.getElementById('ratingErr').style.display = 'none';
+};
 
 window.selectAge = function(el) {
-  document.querySelectorAll('#ageChips .chip').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedAge = el.dataset.val;
+  const val = el.dataset.val;
+  if (el.classList.contains('selected')) {
+    el.classList.remove('selected');
+    selectedAges = selectedAges.filter(a => a !== val);
+  } else {
+    if (selectedAges.length >= 2) {
+      // deselect first selected
+      const firstSelected = document.querySelector('#ageChips .chip.selected');
+      if (firstSelected) {
+        selectedAges = selectedAges.filter(a => a !== firstSelected.dataset.val);
+        firstSelected.classList.remove('selected');
+      }
+    }
+    el.classList.add('selected');
+    selectedAges.push(val);
+  }
+  document.getElementById('ageErr').style.display = 'none';
 };
 
 /* --- QUESTION SETS --- */
@@ -304,8 +322,7 @@ window.submitRec = async function() {
   const classVal    = document.getElementById('classInput').value.trim();
   const q1Val       = document.getElementById('q1').value.trim();
   const q2Val       = document.getElementById('q2').value.trim();
-  const ratingEl    = document.querySelector('input[name="rating"]:checked');
-  const ratingVal   = ratingEl ? Number(ratingEl.value) : null;
+  const ratingVal   = selectedRating || null;
 
   let valid = true;
   if (!q1Val) { document.getElementById('q1Err').style.display='block'; valid=false; }
@@ -314,7 +331,7 @@ window.submitRec = async function() {
   else document.getElementById('q2Err').style.display='none';
   if (!ratingVal) { document.getElementById('ratingErr').style.display='block'; valid=false; }
   else document.getElementById('ratingErr').style.display='none';
-  if (!selectedAge) { document.getElementById('ageErr').style.display='block'; valid=false; }
+  if (!selectedAges.length) { document.getElementById('ageErr').style.display='block'; valid=false; }
   else document.getElementById('ageErr').style.display='none';
   if (!kidNameVal) { alert('נא למלא שם'); return; }
   if (!valid) return;
@@ -333,7 +350,7 @@ window.submitRec = async function() {
       class_number: classVal,
       category:   cat,
       rating:     ratingVal,
-      age_group:  selectedAge,
+      age_group:  selectedAges,
       q1_answer:  q1Val,
       q2_answer:  q2Val,
       image_url:  imgBase64 || null,

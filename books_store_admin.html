@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-<!-- built: 10:15 -->
+<!-- built: 11:20 -->
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>⚙️ ניהול ספרים</title>
 <style>
@@ -312,6 +312,13 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
         <input type="file" id="modImgInput" accept="image/*" style="display:none" onchange="modUploadPhoto(this.files[0])">
       </label>
     </div>
+    <div id="modRatingWrap" style="display:none;margin-bottom:8px">
+      <div style="font-size:11px;color:#999;font-weight:bold;text-transform:uppercase;margin-bottom:4px">דירוג כוכבים</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="modStarsDisplay" style="color:#f59e0b;font-size:1.1rem"></span>
+        <button onclick="modDeleteRating()" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer;font-weight:bold">🗑️ מחק דירוג</button>
+      </div>
+    </div>
 
     <div class="mod-section-label" id="modQ1Label">שאלה 1</div>
     <textarea class="mod-textarea" id="modQ1" rows="3"></textarea>
@@ -331,7 +338,7 @@ var newBookImg = '';
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, query, where, serverTimestamp }
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, deleteField, doc, onSnapshot, setDoc, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -575,9 +582,24 @@ function loadModRec(bookId, index) {
   // Stars & Age
   const starsEl = document.getElementById('modStars');
   const ageEl   = document.getElementById('modAgeBadge');
+  const ratingWrap = document.getElementById('modRatingWrap');
+  const starsDisplay = document.getElementById('modStarsDisplay');
+
+  if (rec.rating) {
+    starsDisplay.textContent = '★'.repeat(rec.rating) + '☆'.repeat(5 - rec.rating);
+    ratingWrap.style.display = 'block';
+  } else {
+    ratingWrap.style.display = 'none';
+  }
   starsEl.textContent = rec.rating ? ('★'.repeat(rec.rating) + '☆'.repeat(5 - rec.rating)) : '';
-  if (rec.age_group) { ageEl.textContent = rec.age_group; ageEl.style.display = 'inline-block'; }
-  else ageEl.style.display = 'none';
+
+  const ageGroups = Array.isArray(rec.age_group) ? rec.age_group : (rec.age_group ? [rec.age_group] : []);
+  if (ageGroups.length) {
+    ageEl.textContent = ageGroups.join(' | ');
+    ageEl.style.display = 'inline-block';
+  } else {
+    ageEl.style.display = 'none';
+  }
 
   const qs = rec.category === 'toddler' ? Q_PAJ : Q_ALL;
   document.getElementById('modQ1Label').textContent = qs.q1;
@@ -632,6 +654,16 @@ function updateModPhoto() {
     addBtn.style.display = 'flex';
   }
 }
+
+window.modDeleteRating = async function() {
+  if (!modRecId) return;
+  if (!confirm('למחוק את דירוג הכוכבים?')) return;
+  try {
+    await updateDoc(doc(db, 'recommendations', modRecId), { rating: deleteField() });
+    document.getElementById('modRatingWrap').style.display = 'none';
+    document.getElementById('modStars').textContent = '';
+  } catch(e) { alert('שגיאה: ' + e.message); }
+};
 
 window.modDeletePhoto = function() {
   modPhotoVal = null;
