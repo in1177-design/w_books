@@ -68,9 +68,13 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 .drop-zone{border:2px dashed #c084fc;border-radius:12px;padding:1.5rem;text-align:center;color:#9b30c8;cursor:pointer;background:#fdf4ff;margin-bottom:12px}
 .drop-zone input{display:none}
 .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:12px}
-.thumb-grid{width:calc(100% + 3rem)!important;margin:0 -1.5rem 12px!important;padding:0!important}
-.thumb-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#f5f5f5}
+#thumbGrid{margin:0 -1.5rem 0;padding:0}
+.thumb-wrap{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#f0f0f0}
 .thumb-wrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.drop-zone.has-image{padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid #c084fc;margin-bottom:6px}
+.drop-zone.has-image > div:not(.dz-mini-text){display:none}
+.dz-mini-text{font-size:12px;font-weight:600;color:#9b30c8;display:none}
+.drop-zone.has-image .dz-mini-text{display:block}
 .thumb-del{position:absolute;top:2px;left:2px;background:rgba(0,0,0,.6);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer}
 .add-btn{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:13px;width:100%;margin-top:14px;font-size:15px;cursor:pointer;font-weight:bold}
 .cancel-btn{background:#f5f5f5;color:#555;border:1px solid #ddd;border-radius:10px;padding:10px;width:100%;margin-top:8px;font-size:14px;cursor:pointer}
@@ -170,10 +174,11 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 <div class="panel-bg" id="panelBg">
   <div class="panel">
     <h2>➕ הוסף ספר חדש</h2>
-    <div class="drop-zone" onclick="document.getElementById('fileInput').click()" style="margin-bottom:10px">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" style="margin-bottom:10px">
       <div style="font-size:2rem">📸</div>
       <div style="font-size:13px;margin-top:4px;font-weight:600;color:#654B44">לחצי לבחירת תמונה</div>
       <div style="font-size:11px;color:#aaa;margin-top:2px">קלוד יזהה את שם הספר אוטומטית</div>
+      <div class="dz-mini-text">📸 החלף תמונה</div>
       <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
     </div>
     <div id="thumbGrid" style="margin:8px 0"></div>
@@ -890,7 +895,10 @@ window.deleteBook = async function(id){
 };
 
 window.openPanel = () => document.getElementById('panelBg').classList.add('open');
-window.closePanel = () => document.getElementById('panelBg').classList.remove('open');
+window.closePanel = () => {
+  document.getElementById('panelBg').classList.remove('open');
+  document.getElementById('dropZone').classList.remove('has-image');
+};
 
 function resizeImage(dataUrl, maxSize) {
   return new Promise(resolve => {
@@ -913,6 +921,7 @@ window.handleFile = async function(file) {
   reader.onload = async e => {
     newBookImg = await resizeImage(e.target.result, 800);
     document.getElementById('thumbGrid').innerHTML = `<div class="thumb-wrap"><img src="${newBookImg}"></div>`;
+    document.getElementById('dropZone').classList.add('has-image');
     // Claude identification via proxy
     const status = document.getElementById('identStatus');
     status.style.display = 'block';
