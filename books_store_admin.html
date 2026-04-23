@@ -86,10 +86,11 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 .login-btn{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:12px;width:100%;font-size:15px;cursor:pointer;font-weight:bold}
 .err{color:#ef4444;font-size:13px;margin-top:8px}
 .processing{font-size:13px;color:#7c2fa0;text-align:center;padding:8px;display:none}
-.sort-toggle{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:bold;margin-right:8px}
+.sort-toggle{background:linear-gradient(90deg,#7c2fa0,#d44f9e);color:white;border:none;border-radius:10px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:bold;margin-right:8px;transition:.2s}
 .sort-toggle.active{background:linear-gradient(90deg,#16a34a,#15803d)}
-.grid.drag-mode .card{cursor:grab}
-.grid.drag-mode .card.dragging{opacity:0.7;cursor:grabbing}
+.grid.drag-mode .card{cursor:grab;border:2px solid transparent;transition:all .15s}
+.grid.drag-mode .card:hover{border-color:#7c2fa0;box-shadow:0 6px 20px rgba(124,47,160,0.3);transform:translateY(-2px)}
+.grid.drag-mode .card.dragging{opacity:0.6;cursor:grabbing;border-color:#16a34a}
 .badge-new{position:absolute;top:8px;right:8px;background:#e74c3c;color:white;font-size:10px;font-weight:700;padding:4px 8px;border-radius:12px;z-index:5}
 
 /* === RECOMMENDATION STYLES === */
@@ -150,8 +151,8 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
   <div class="admin-bar" id="statsBar"></div>
   <div class="controls">
     <div style="display:flex;gap:6px;margin-bottom:10px">
-      <input class="search" type="text" id="search" placeholder="🔍 חיפוש..." oninput="render()" style="margin-bottom:0;flex:1">
       <button class="sort-toggle" id="sortToggle" onclick="toggleSortMode()">🔄 סידור ידני</button>
+      <input class="search" type="text" id="search" placeholder="🔍 חיפוש..." oninput="render()" style="margin-bottom:0;flex:1">
       <button onclick="render()" style="padding:8px 14px;border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;background:rgba(255,255,255,0.25);color:white;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:bold">חיפוש</button>
     </div>
     <div class="filters" id="filters"></div>
