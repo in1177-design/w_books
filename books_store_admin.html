@@ -375,6 +375,16 @@ const CATS = ["ספרי ילדים","פעוטות","ראשית קריאה","קו
 const SOLD_CAT = "כבר נמכר";
 const REC_CAT  = "⭐ מומלצים";
 const ALL_CATS = ["הכל", REC_CAT, ...CATS, SOLD_CAT];
+const CAT_LABELS = {
+  "ספרי ילדים":          "ספרי ילדים (4-8)",
+  "פעוטות":              "פעוטות (0-3)",
+  "ראשית קריאה":         "ראשית קריאה (5-7)",
+  "קומיקס":              "קומיקס (7+)",
+  "ספרות נוער":          "ספרות נוער (12-18)",
+  "ספרים עבור מבוגרים":  "ספרים עבור מבוגרים (18+)",
+  "PJ ספריית":           "ספריית PJ (1-7)",
+};
+function catLabel(c){ return CAT_LABELS[c] || c; }
 const PHONE = "972544934904";
 const RECOMMEND_BASE = 'https://in1177-design.github.io/w_books/recommend.html';
 
@@ -472,7 +482,7 @@ function matchFilter(b){
 
 function buildFilters(id){
   document.getElementById(id).innerHTML = ALL_CATS.map((c,i) =>
-    `<button class="fb ${c===activeFilter?'active':''}" data-cat="${i}" onclick="setFilterByIndex(${i},this)">${c}</button>`
+    `<button class="fb ${c===activeFilter?'active':''}" data-cat="${i}" onclick="setFilterByIndex(${i},this)">${catLabel(c)}</button>`
   ).join('');
 }
 
@@ -489,7 +499,7 @@ function setFilter(cat, el){
 
 function cardHtml(b){
   const cats = getCats(b);
-  const catTags = cats.map(c => `<span class="cat-tag">${c}</span>`).join('');
+  const catTags = cats.map(c => `<span class="cat-tag">${catLabel(c)}</span>`).join('');
   const selected = selectedIds.has(String(b.id));
   const recList = recs[String(b.id)] || [];
   const pendingRecs = recList.filter(r => r.status === 'pending');

@@ -178,6 +178,16 @@ const params = new URLSearchParams(location.search);
 const bookId   = params.get('book_id');
 const kidName  = params.get('kid_name')  || '';
 const category = params.get('category')  || 'all';
+const CAT_LABELS = {
+  "ספרי ילדים":          "ספרי ילדים (4-8)",
+  "פעוטות":              "פעוטות (0-3)",
+  "ראשית קריאה":         "ראשית קריאה (5-7)",
+  "קומיקס":              "קומיקס (7+)",
+  "ספרות נוער":          "ספרות נוער (12-18)",
+  "ספרים עבור מבוגרים":  "ספרים עבור מבוגרים (18+)",
+  "PJ ספריית":           "ספריית PJ (1-7)",
+};
+function catLabel(c){ return CAT_LABELS[c] || c; }
 
 let bookData = null;
 let imgBase64 = null;
@@ -257,7 +267,7 @@ async function init() {
   document.getElementById('bookTitle').textContent = bookData.title || '';
   document.getElementById('bookAuthor').textContent = bookData.author || '';
   const cats = Array.isArray(bookData.cat) ? bookData.cat.join(', ') : (bookData.cat || '');
-  document.getElementById('bookCat').textContent = cats;
+  document.getElementById('bookCat').textContent = Array.isArray(bookData.cat) ? bookData.cat.map(catLabel).join(', ') : catLabel(bookData.cat || '');
 
   const qs = (isPajama(category) || isPajama(cats)) ? Q_PAJAMA : Q_ALL;
   document.getElementById('q1Label').innerHTML = qs.q1 + ' <span style="color:#e74c3c">*</span>';

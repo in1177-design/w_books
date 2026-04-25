@@ -323,6 +323,16 @@ const recsCol  = collection(db, 'recommendations');
 const ALL_CATS = ["הכל","⭐ מומלצים","ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרים עבור מבוגרים","משחקים","חוברות לימוד","PJ ספריית","כבר נמכר"];
 const SOLD_CAT = "כבר נמכר";
 const REC_CAT  = "⭐ מומלצים";
+const CAT_LABELS = {
+  "ספרי ילדים":          "ספרי ילדים (4-8)",
+  "פעוטות":              "פעוטות (0-3)",
+  "ראשית קריאה":         "ראשית קריאה (5-7)",
+  "קומיקס":              "קומיקס (7+)",
+  "ספרות נוער":          "ספרות נוער (12-18)",
+  "ספרים עבור מבוגרים":  "ספרים עבור מבוגרים (18+)",
+  "PJ ספריית":           "ספריית PJ (1-7)",
+};
+function catLabel(c){ return CAT_LABELS[c] || c; }
 const PHONE = "972544923904";
 
 let books = [];
@@ -346,7 +356,7 @@ function matchFilter(b){
 
 function buildFilters(){
   document.getElementById('filters').innerHTML = ALL_CATS.map((c,i) =>
-    `<button class="fb ${c===activeFilter?'active':''}" data-ci="${i}" ${c===SOLD_CAT?"data-sold":""} onclick="setFilterByIdx(${i},this)">${c}</button>`
+    `<button class="fb ${c===activeFilter?'active':''}" data-ci="${i}" ${c===SOLD_CAT?"data-sold":""} onclick="setFilterByIdx(${i},this)">${catLabel(c)}</button>`
   ).join('');
 }
 function setFilterByIdx(i,el){ setFilter(ALL_CATS[i],el); }
@@ -373,7 +383,7 @@ function recPortraits(recList) {
 
 function cardHtml(b){
   const cats = getCats(b);
-  const firstCat = cats.map(c => `<span class="category-badge">${c}</span>`).join('');
+  const firstCat = cats.map(c => `<span class="category-badge">${catLabel(c)}</span>`).join('');
   const selected = selectedIds.has(String(b.id));
   const isNew = b.createdAt?.toMillis?.() > Date.now() - 3*24*60*60*1000;
   const recList = approvedRecs[String(b.id)] || [];
