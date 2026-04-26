@@ -199,6 +199,7 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
         <div id="migStatus" style="font-size:12px;color:#1e40af;text-align:center"></div>
       </div>
       <button id="migrateBtn" onclick="startMigration()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:bold;width:100%">🔄 התחל מיגרציה</button>
+      <button id="migStopBtn" onclick="stopMigration()" style="display:none;background:#dc2626;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:bold;width:100%;margin-top:6px">⏹ עצור</button>
     </div>
 
     <!-- Restore -->
@@ -1053,33 +1054,63 @@ window.backupData = async function() {
   setTimeout(() => { btn.disabled = false; btn.textContent = '⬇️ הורד גיבוי'; }, 3000);
 };
 
+let _migAbort = false;
+
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+  ]);
+}
+
 window.startMigration = async function() {
   if (!confirm('מומלץ להוריד גיבוי לפני. להתחיל מיגרציה?')) return;
+  _migAbort = false;
   const btn = document.getElementById('migrateBtn');
+  const stopBtn = document.getElementById('migStopBtn');
   const barWrap = document.getElementById('migProgressWrap');
   const bar = document.getElementById('migBar');
   const status = document.getElementById('migStatus');
-  btn.disabled = true; barWrap.style.display = 'block';
+  btn.style.display = 'none'; stopBtn.style.display = 'block';
+  barWrap.style.display = 'block';
 
   const snap = await getDocs(booksCol);
   const toMigrate = snap.docs.filter(d => (d.data().img || '').startsWith('data:'));
 
-  if (!toMigrate.length) { status.textContent = '✅ כל התמונות כבר ב-Storage'; btn.disabled = false; return; }
+  if (!toMigrate.length) {
+    status.textContent = '✅ כל התמונות כבר ב-Storage';
+    btn.style.display = 'block'; stopBtn.style.display = 'none';
+    return;
+  }
 
   let done = 0, failed = 0;
   for (const d of toMigrate) {
-    status.textContent = `מעדכן ${done + 1}/${toMigrate.length}...`;
-    bar.style.width = `${Math.round((done / toMigrate.length) * 100)}%`;
+    if (_migAbort) { status.textContent = `⏹ הופסק: ${done} עודכנו`; break; }
+    status.textContent = `מעדכן ${done + failed + 1}/${toMigrate.length}...`;
+    bar.style.width = `${Math.round(((done + failed) / toMigrate.length) * 100)}%`;
     try {
-      const url = await uploadToStorage(d.id, d.data().img);
+      const url = await withTimeout(uploadToStorage(d.id, d.data().img), 30000);
       await updateDoc(doc(db, 'books', d.id), { img: url });
       done++;
-    } catch(e) { console.error('book', d.id, e); failed++; }
+    } catch(e) {
+      const reason = e.message === 'timeout' ? 'timeout' : (e.code || e.message);
+      console.error('book', d.id, reason);
+      if (done === 0 && failed === 0) {
+        status.innerHTML = `❌ נכשל בספר הראשון: <b>${reason}</b><br><small>בדקי Storage Rules ב-Firebase Console</small>`;
+        btn.style.display = 'block'; stopBtn.style.display = 'none';
+        return;
+      }
+      failed++;
+    }
   }
-  bar.style.width = '100%';
-  status.textContent = `✅ הושלם: ${done} עודכנו${failed ? ` | ${failed} נכשלו` : ''}`;
-  btn.disabled = false;
+  if (!_migAbort) {
+    bar.style.width = '100%';
+    status.textContent = `✅ הושלם: ${done} עודכנו${failed ? ` | ${failed} נכשלו` : ''}`;
+  }
+  btn.style.display = 'block'; stopBtn.style.display = 'none';
 };
+
+window.stopMigration = function() { _migAbort = true; };
 
 window.restoreFromBackup = async function(file) {
   if (!file) return;
