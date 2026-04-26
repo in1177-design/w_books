@@ -156,7 +156,10 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 </div>
 
 <div id="adminUI" style="display:none">
-  <div class="header"><h1>⚙️ ניהול ספרים</h1><p>עמוד מנהלת</p></div>
+  <div class="header" style="display:flex;align-items:center;justify-content:space-between">
+    <div><h1>⚙️ ניהול ספרים</h1><p>עמוד מנהלת</p></div>
+    <button onclick="openMigrationPanel()" style="background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.5);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold">🛠️ כלים</button>
+  </div>
   <div class="admin-bar" id="statsBar"></div>
   <div class="controls">
     <div style="display:flex;gap:6px;margin-bottom:10px">
@@ -168,6 +171,47 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
   </div>
   <div class="grid" id="grid"><p class="loading">⏳ טוענת ספרים...</p></div>
   <button class="add-fab" onclick="openPanel()">＋</button>
+</div>
+
+<!-- Migration modal -->
+<div id="migModal" class="modal-bg">
+  <div class="modal" style="max-width:400px;direction:rtl">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="color:#1a5276;font-size:1.1rem">🛠️ כלי מיגרציה</h3>
+      <button onclick="closeMigrationPanel()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa;line-height:1">×</button>
+    </div>
+
+    <!-- Backup -->
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-weight:bold;color:#166534;margin-bottom:4px">📦 שלב 1 — גיבוי נתונים</div>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">מוריד קובץ JSON עם כל הספרים כולל התמונות. שמרי אותו לפני המיגרציה.</p>
+      <button id="backupBtn" onclick="backupData()" style="background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:bold;width:100%">⬇️ הורד גיבוי</button>
+    </div>
+
+    <!-- Migration -->
+    <div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-weight:bold;color:#1e40af;margin-bottom:4px">🚀 שלב 2 — מיגרציה לStorage</div>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">מעביר תמונות מ-base64 ל-Firebase Storage. ספרים חדשים יעלו לStorage אוטומטית.</p>
+      <div id="migProgressWrap" style="display:none;margin-bottom:8px">
+        <div style="background:#dbeafe;border-radius:20px;height:10px;overflow:hidden;margin-bottom:6px">
+          <div id="migBar" style="background:#2563eb;height:100%;width:0%;border-radius:20px;transition:width .3s"></div>
+        </div>
+        <div id="migStatus" style="font-size:12px;color:#1e40af;text-align:center"></div>
+      </div>
+      <button id="migrateBtn" onclick="startMigration()" style="background:#2563eb;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:bold;width:100%">🔄 התחל מיגרציה</button>
+    </div>
+
+    <!-- Restore -->
+    <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px">
+      <div style="font-weight:bold;color:#991b1b;margin-bottom:4px">♻️ שחזור מגיבוי (חירום בלבד)</div>
+      <p style="font-size:12px;color:#555;margin-bottom:10px">שחזור מקובץ JSON — רק אם משהו השתבש במיגרציה.</p>
+      <label style="background:#dc2626;color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:bold;width:100%;display:block;text-align:center">
+        📂 בחר קובץ גיבוי
+        <input type="file" accept=".json" onchange="restoreFromBackup(this.files[0])" style="display:none">
+      </label>
+      <div id="restoreStatus" style="display:none;font-size:12px;color:#991b1b;text-align:center;margin-top:8px"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Add panel -->
@@ -357,6 +401,8 @@ var newBookImg = '';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, deleteField, doc, onSnapshot, setDoc, query, where, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCicKBTwcN1utsOAgKThEHjTAeovt4m_Ys",
@@ -368,8 +414,16 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const booksCol = collection(db, 'books');
 const recsCol  = collection(db, 'recommendations');
+
+async function uploadToStorage(bookId, base64DataUrl) {
+  const storageRef = ref(storage, `books/${bookId}.jpg`);
+  const base64 = base64DataUrl.includes(',') ? base64DataUrl.split(',')[1] : base64DataUrl;
+  await uploadString(storageRef, base64, 'base64', { contentType: 'image/jpeg' });
+  return await getDownloadURL(storageRef);
+}
 
 const CATS = ["ספרי ילדים","פעוטות","ראשית קריאה","קומיקס","ספרות נוער","ספרי קריאה","משחקים","חוברות לימוד","PJ ספריית","ספרים עבור מבוגרים"];
 const SOLD_CAT = "כבר נמכר";
@@ -966,7 +1020,13 @@ window.addOneBook = async function(){
   if (!title) { alert('נא למלא שם ספר'); return; }
   try {
     const minOrder = books.reduce((m,b) => Math.min(m, b.order||0), 0);
-    await addDoc(booksCol, { title, author, price, cat: cats.length ? cats : ['ספרי ילדים'], img: newBookImg||'', sold:false, order: minOrder - 1, createdAt: serverTimestamp() });
+    const docRef = await addDoc(booksCol, { title, author, price, cat: cats.length ? cats : ['ספרי ילדים'], img: '', sold:false, order: minOrder - 1, createdAt: serverTimestamp() });
+    if (newBookImg) {
+      try {
+        const url = await uploadToStorage(docRef.id, newBookImg);
+        await updateDoc(docRef, { img: url });
+      } catch(e) { console.error('Image upload failed:', e); }
+    }
     window.closePanel();
     newBookImg = '';
     document.getElementById('thumbGrid').innerHTML = '';
@@ -976,6 +1036,71 @@ window.addOneBook = async function(){
     document.querySelectorAll('.ncat').forEach(cb => cb.checked = false);
   } catch(e) { alert('שגיאה: ' + e.message); }
 };
+
+/* ====== MIGRATION TOOLS ====== */
+
+window.backupData = async function() {
+  const btn = document.getElementById('backupBtn');
+  btn.disabled = true; btn.textContent = '⏳ מכין גיבוי...';
+  try {
+    const snap = await getDocs(booksCol);
+    const data = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `books_backup_${new Date().toISOString().slice(0,10)}.json` });
+    a.click(); URL.revokeObjectURL(a.href);
+    btn.textContent = '✅ גיבוי הורד!';
+  } catch(e) { alert('שגיאה: ' + e.message); btn.textContent = '⬇️ הורד גיבוי'; }
+  setTimeout(() => { btn.disabled = false; btn.textContent = '⬇️ הורד גיבוי'; }, 3000);
+};
+
+window.startMigration = async function() {
+  if (!confirm('מומלץ להוריד גיבוי לפני. להתחיל מיגרציה?')) return;
+  const btn = document.getElementById('migrateBtn');
+  const barWrap = document.getElementById('migProgressWrap');
+  const bar = document.getElementById('migBar');
+  const status = document.getElementById('migStatus');
+  btn.disabled = true; barWrap.style.display = 'block';
+
+  const snap = await getDocs(booksCol);
+  const toMigrate = snap.docs.filter(d => (d.data().img || '').startsWith('data:'));
+
+  if (!toMigrate.length) { status.textContent = '✅ כל התמונות כבר ב-Storage'; btn.disabled = false; return; }
+
+  let done = 0, failed = 0;
+  for (const d of toMigrate) {
+    status.textContent = `מעדכן ${done + 1}/${toMigrate.length}...`;
+    bar.style.width = `${Math.round((done / toMigrate.length) * 100)}%`;
+    try {
+      const url = await uploadToStorage(d.id, d.data().img);
+      await updateDoc(doc(db, 'books', d.id), { img: url });
+      done++;
+    } catch(e) { console.error('book', d.id, e); failed++; }
+  }
+  bar.style.width = '100%';
+  status.textContent = `✅ הושלם: ${done} עודכנו${failed ? ` | ${failed} נכשלו` : ''}`;
+  btn.disabled = false;
+};
+
+window.restoreFromBackup = async function(file) {
+  if (!file) return;
+  if (!confirm(`שחזור יחליף נתונים קיימים. להמשיך?`)) return;
+  const status = document.getElementById('restoreStatus');
+  status.style.display = 'block'; status.textContent = '⏳ קורא קובץ...';
+  try {
+    const data = JSON.parse(await file.text());
+    let done = 0;
+    for (const book of data) {
+      const { _id, ...fields } = book;
+      await setDoc(doc(db, 'books', _id), fields);
+      done++;
+      status.textContent = `משחזר ${done}/${data.length}...`;
+    }
+    status.textContent = `✅ שוחזרו ${done} ספרים בהצלחה`;
+  } catch(e) { status.textContent = '❌ שגיאה: ' + e.message; }
+};
+
+window.openMigrationPanel = () => document.getElementById('migModal').classList.add('open');
+window.closeMigrationPanel = () => document.getElementById('migModal').classList.remove('open');
 
 // Expose for inline HTML
 window.setFilter = setFilter;
