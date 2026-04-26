@@ -339,10 +339,11 @@ let books = [];
 let approvedRecs = {};  // bookId -> array of approved recs
 let activeFilter = "הכל";
 let selectedIds = new Set();
+let visibleCount = 50;
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle cx='30' cy='30' r='30' fill='%23fde68a'/%3E%3Ccircle cx='30' cy='22' r='11' fill='%23f59e0b'/%3E%3Cellipse cx='30' cy='46' rx='16' ry='11' fill='%23f59e0b'/%3E%3C/svg%3E";
 
-const Q_ALL = { q1:'ממליץ/ה כי...', q2:'הכי אהבתי...' };
+const Q_ALL = { q1:'קצת על הספר...', q2:'למה כדאי לכם לקרוא?' };
 const Q_PAJ = { q1:'מה הספר מלמד ולמה הוא כייפי?', q2:'למה כדאי להורים לקנות את הספר?' };
 
 function getCats(b){ return Array.isArray(b.cat) ? b.cat : [b.cat]; }
@@ -363,6 +364,7 @@ function setFilterByIdx(i,el){ setFilter(ALL_CATS[i],el); }
 
 function setFilter(cat, el){
   activeFilter = cat;
+  visibleCount = 50;
   document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   render();
@@ -544,7 +546,7 @@ function loadRecModal(bookId, idx) {
 
   const ageGroups = Array.isArray(rec.age_group) ? rec.age_group : (rec.age_group ? [rec.age_group] : []);
   if (ageGroups.length) {
-    ageLabelEl.textContent = 'הוא/היא חושב/ת שזה מתאים לגיל:';
+    ageLabelEl.textContent = 'מתאים לגילאי:';
     ageEl.innerHTML = ageGroups.map(a => `<span class="rec-age-badge">${a}</span>`).join('');
     ageLabelEl.style.display = 'block';
     ageEl.style.display = 'block';
@@ -581,10 +583,38 @@ function recModalNav(dir){
 
 function closeRecModal(){ document.getElementById('recModal').classList.remove('open'); }
 
+let _scrollLocked = false;
+
 function render(){
   const f = books.filter(b => matchFilter(b));
   const grid = document.getElementById('grid');
-  grid.innerHTML = f.length ? f.map(b => cardHtml(b)).join('') : '<p class="empty">לא נמצאו ספרים 📭</p>';
+  if (!f.length) { grid.innerHTML = '<p class="empty">לא נמצאו ספרים 📭</p>'; _detachSentinel(); return; }
+  grid.innerHTML = f.slice(0, visibleCount).map(b => cardHtml(b)).join('');
+  if (f.length > visibleCount) _attachSentinel(f); else _detachSentinel();
+}
+
+let _sentinel = null;
+let _observer = null;
+
+function _detachSentinel(){
+  if (_observer) { _observer.disconnect(); _observer = null; }
+  if (_sentinel && _sentinel.parentNode) _sentinel.parentNode.removeChild(_sentinel);
+  _sentinel = null;
+}
+
+function _attachSentinel(f){
+  _detachSentinel();
+  _sentinel = document.createElement('div');
+  _sentinel.style.cssText = 'grid-column:1/-1;height:1px';
+  document.getElementById('grid').appendChild(_sentinel);
+  _observer = new IntersectionObserver((entries) => {
+    if (!entries[0].isIntersecting || _scrollLocked) return;
+    _scrollLocked = true;
+    visibleCount += 50;
+    render();
+    _scrollLocked = false;
+  }, { rootMargin: '200px' });
+  _observer.observe(_sentinel);
 }
 
 onSnapshot(booksCol, (snap) => {

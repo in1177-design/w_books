@@ -224,12 +224,16 @@ window.selectAge = function(el) {
 
 /* --- QUESTION SETS --- */
 const Q_ALL = {
-  q1: 'למה את/ה ממליץ/ה על הספר?',
-  q2: 'מה הכי אהבת בו?'
+  q1:    'על מה הספר? (בקצרה)',
+  q1ph:  'ספר/י לנו קצת על העלילה או על הדמויות...',
+  q2:    'למה כדאי לקרוא אותו?',
+  q2ph:  'מה היה מעניין/מצחיק/מרגש? למה הוא מומלץ?'
 };
 const Q_PAJAMA = {
-  q1: 'מה הספר מלמד ולמה הוא כייפי?',
-  q2: 'למה כדאי להורים לקנות את הספר?'
+  q1:    'מה הספר מלמד ולמה הוא כייפי?',
+  q1ph:  'ספר/י לנו על הנושא שהספר מלמד...',
+  q2:    'למה כדאי להורים לקנות את הספר?',
+  q2ph:  'מה הילדים הכי אוהבים בספר הזה?'
 };
 
 function isPajama(cat) {
@@ -272,8 +276,8 @@ async function init() {
   const qs = (isPajama(category) || isPajama(cats)) ? Q_PAJAMA : Q_ALL;
   document.getElementById('q1Label').innerHTML = qs.q1 + ' <span style="color:#e74c3c">*</span>';
   document.getElementById('q2Label').innerHTML = qs.q2 + ' <span style="color:#e74c3c">*</span>';
-  document.getElementById('q1').placeholder = qs.q1;
-  document.getElementById('q2').placeholder = qs.q2;
+  document.getElementById('q1').placeholder = qs.q1ph;
+  document.getElementById('q2').placeholder = qs.q2ph;
 
   show('mainContent');
 }
