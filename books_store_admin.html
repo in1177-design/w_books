@@ -147,18 +147,24 @@ body{font-family:Arial,sans-serif;min-height:100vh;background:linear-gradient(13
 
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
-    <h2>🔒 כניסת מנהלת</h2>
-    <p>הזיני סיסמה כדי לנהל את הספרים</p>
-    <input type="password" id="passInput" placeholder="••••" onkeydown="if(event.key==='Enter')checkPass()">
-    <button class="login-btn" onclick="checkPass()">כניסה</button>
-    <p class="err" id="passErr"></p>
+    <div style="font-size:2.5rem;margin-bottom:.5rem">📚</div>
+    <h2>כניסת מנהלת</h2>
+    <p>התחברי עם חשבון Google שלך</p>
+    <button id="loginBtn" class="login-btn" style="display:flex;align-items:center;gap:10px;justify-content:center;margin-top:1rem">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google">
+      כניסה עם Google
+    </button>
+    <p class="err" id="loginError" style="display:none;margin-top:.8rem"></p>
   </div>
 </div>
 
 <div id="adminUI" style="display:none">
   <div class="header" style="display:flex;align-items:center;justify-content:space-between">
     <div><h1>⚙️ ניהול ספרים</h1><p>עמוד מנהלת</p></div>
-    <button onclick="openMigrationPanel()" style="background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.5);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold">🛠️ כלים</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="openMigrationPanel()" style="background:rgba(255,255,255,0.2);color:white;border:1.5px solid rgba(255,255,255,0.5);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;font-weight:bold">🛠️ כלים</button>
+      <button id="logoutBtn" style="display:none;background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;padding:7px 14px;font-size:13px;cursor:pointer;align-items:center;gap:6px">🚪 יציאה</button>
+    </div>
   </div>
   <div class="admin-bar" id="statsBar"></div>
   <div class="controls">
@@ -404,6 +410,8 @@ import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, delete
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadString, getDownloadURL }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCicKBTwcN1utsOAgKThEHjTAeovt4m_Ys",
@@ -413,11 +421,53 @@ const firebaseConfig = {
   messagingSenderId: "14338690162",
   appId: "1:14338690162:web:10c1f5a931a9f34dd806eb"
 };
+const ALLOWED_EMAIL = "in1177@gmail.com";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 const booksCol = collection(db, 'books');
 const recsCol  = collection(db, 'recommendations');
+
+// ── Auth UI ──────────────────────────────────────────────────────────────
+const loginScreenEl = document.getElementById('loginScreen');
+const adminUIEl     = document.getElementById('adminUI');
+const loginBtnEl    = document.getElementById('loginBtn');
+const logoutBtnEl   = document.getElementById('logoutBtn');
+const loginErrorEl  = document.getElementById('loginError');
+
+loginBtnEl.addEventListener('click', async () => {
+  try {
+    loginErrorEl.style.display = 'none';
+    const result = await signInWithPopup(auth, provider);
+    if (result.user.email !== ALLOWED_EMAIL) {
+      loginErrorEl.textContent = '❌ אין הרשאה לאימייל זה.';
+      loginErrorEl.style.display = 'block';
+      await signOut(auth);
+    }
+  } catch (e) {
+    loginErrorEl.textContent = '❌ שגיאה בהתחברות, נסי שוב.';
+    loginErrorEl.style.display = 'block';
+  }
+});
+
+logoutBtnEl.addEventListener('click', () => signOut(auth));
+
+let appInitialized = false;
+onAuthStateChanged(auth, user => {
+  if (user && user.email === ALLOWED_EMAIL) {
+    loginScreenEl.style.display = 'none';
+    adminUIEl.style.display = 'block';
+    logoutBtnEl.style.display = 'inline-flex';
+    if (!appInitialized) { appInitialized = true; initApp(); }
+  } else {
+    loginScreenEl.style.display = 'flex';
+    adminUIEl.style.display = 'none';
+    logoutBtnEl.style.display = 'none';
+  }
+});
 
 async function uploadToStorage(bookId, base64DataUrl) {
   const storageRef = ref(storage, `books/${bookId}.jpg`);
@@ -1144,40 +1194,31 @@ window.handleDragEnd = handleDragEnd;
 window.handleDragOver = handleDragOver;
 window.handleDrop = handleDrop;
 
-/* PASSWORD */
-window.checkPass = function(){
-  const v = document.getElementById('passInput').value;
-  if (v === '1234') {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminUI').style.display = 'block';
-  } else {
-    document.getElementById('passErr').textContent = 'סיסמה שגויה';
-  }
-};
-
-/* LISTENERS */
-onSnapshot(booksCol, snap => {
-  books = snap.docs.map(d => ({...d.data(), id: d.id}));
-  books.sort((a,b) => (a.order||0) - (b.order||0));
-  buildFilters('filters');
-  render();
-  updateFab();
-  const total = books.length;
-  const sold = books.filter(b => b.sold).length;
-  document.getElementById('statsBar').textContent = `סה"כ: ${total} ספרים | נמכרו: ${sold} | זמינים: ${total-sold}`;
-});
-
-// Listen to recommendations — store ALL per book
-onSnapshot(recsCol, snap => {
-  recs = {};
-  snap.docs.forEach(d => {
-    const rec = {...d.data(), _id: d.id};
-    const key = String(rec.book_id);
-    if (!recs[key]) recs[key] = [];
-    recs[key].push(rec);
+/* LISTENERS — נפתחים רק לאחר התחברות */
+function initApp() {
+  onSnapshot(booksCol, snap => {
+    books = snap.docs.map(d => ({...d.data(), id: d.id}));
+    books.sort((a,b) => (a.order||0) - (b.order||0));
+    buildFilters('filters');
+    render();
+    updateFab();
+    const total = books.length;
+    const sold = books.filter(b => b.sold).length;
+    document.getElementById('statsBar').textContent = `סה"כ: ${total} ספרים | נמכרו: ${sold} | זמינים: ${total-sold}`;
   });
-  render();
-});
+
+  // Listen to recommendations — store ALL per book
+  onSnapshot(recsCol, snap => {
+    recs = {};
+    snap.docs.forEach(d => {
+      const rec = {...d.data(), _id: d.id};
+      const key = String(rec.book_id);
+      if (!recs[key]) recs[key] = [];
+      recs[key].push(rec);
+    });
+    render();
+  });
+}
 </script>
 </body>
 </html>
