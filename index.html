@@ -31,8 +31,13 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 }
 /* PROJECT INFO */
 .project-info{background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);border:2px solid #FFF;border-radius:16px;padding:12px 16px;margin:12px 16px;text-align:center;color:#654B44;font-size:16px;font-weight:500;line-height:1.6}
-/* FILTERS */
-.controls{padding:12px 12px;display:flex;justify-content:center;position:sticky;top:64px;z-index:9;background:rgba(255,251,215,0.92);backdrop-filter:blur(6px);border-bottom:1px solid rgba(101,75,68,0.08)}
+/* SEARCH + FILTERS */
+.controls{padding:10px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;position:sticky;top:64px;z-index:9;background:rgba(255,251,215,0.92);backdrop-filter:blur(6px);border-bottom:1px solid rgba(101,75,68,0.08)}
+.search-wrap{width:100%;max-width:480px;position:relative}
+.search-input{width:100%;padding:9px 14px 9px 36px;border:2px solid rgba(101,75,68,0.25);border-radius:24px;font-size:14px;font-family:'Heebo',Arial,sans-serif;color:#654B44;background:rgba(255,255,255,0.75);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:#654B44;background:white}
+.search-input::placeholder{color:rgba(101,75,68,0.45);font-family:'Heebo',Arial,sans-serif}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;opacity:.5}
 .filters{display:flex;gap:6px;flex-wrap:wrap}
 .fb{padding:5px 14px;border:2px solid #87a3a5;border-radius:20px;font-size:12px;background:#fffbd7;color:#000;cursor:pointer;transition:.15s;font-family:'Heebo',sans-serif}
 .fb.active{background:#654B44;color:white;border-color:#654B44;font-weight:700}
@@ -219,6 +224,10 @@ body{background:#fffbd7;min-height:100vh;direction:rtl}
 </div>
 
 <div class="controls">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" type="text" id="searchInput" placeholder="חיפוש לפי שם ספר או סופר..." oninput="onSearch()">
+  </div>
   <div class="filters" id="filters"></div>
 </div>
 
@@ -585,8 +594,16 @@ function closeRecModal(){ document.getElementById('recModal').classList.remove('
 
 let _scrollLocked = false;
 
+function onSearch(){
+  visibleCount = 50;
+  render();
+}
+
 function render(){
-  const f = books.filter(b => matchFilter(b));
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+  const f = books.filter(b => matchFilter(b) && (!q ||
+    (b.title||'').toLowerCase().includes(q) ||
+    (b.author||'').toLowerCase().includes(q)));
   const grid = document.getElementById('grid');
   if (!f.length) { grid.innerHTML = '<p class="empty">לא נמצאו ספרים 📭</p>'; _detachSentinel(); return; }
   grid.innerHTML = f.slice(0, visibleCount).map(b => cardHtml(b)).join('');
@@ -644,6 +661,7 @@ onSnapshot(recsCol, (snap) => {
   render();
 });
 
+window.onSearch = onSearch;
 window.toggleSelect = toggleSelect;
 window.setFilter = setFilter;
 window.setFilterByIdx = setFilterByIdx;
